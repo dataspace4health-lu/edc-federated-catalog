@@ -33,7 +33,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy only the fat jar and configs from builder
 COPY --from=builder /workspace/build/libs/*.jar /app/federated-catalog.jar
-COPY --from=builder /workspace/participants.json /app/participants.json
 COPY --from=builder /workspace/config.properties /app/config.properties
 
 # Run the jar with config + logging
