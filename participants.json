@@ -1,5 +1,0 @@
-{
-  "Participant 1":  "http://host.docker.internal:8092/api/dsp",
-  "Participant 2":  "http://host.docker.internal:8093/api/dsp"
-}
-

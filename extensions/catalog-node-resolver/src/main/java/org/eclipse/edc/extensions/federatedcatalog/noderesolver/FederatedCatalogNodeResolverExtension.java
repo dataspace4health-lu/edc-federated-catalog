@@ -14,7 +14,9 @@ import java.io.File;
 @Extension(value = FederatedCatalogNodeResolverExtension.NAME)
 public class FederatedCatalogNodeResolverExtension implements ServiceExtension {
     public static final String NAME = "Federated Catalog Node Resolver Extension";
-    public static final String PARTICIPANT_LIST_FILE_PATH = "participants.json";
+    //TODO : to be removed when participants are stored in a database
+    //this is the path where the participants.json file is mounted in the container
+    public static final String PARTICIPANT_LIST_FILE_PATH = "/etc/config/participants.json";
 
     private File participantListFile;
     private TargetNodeDirectory nodeDirectory;
