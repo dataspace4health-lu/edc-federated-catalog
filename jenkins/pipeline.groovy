@@ -94,10 +94,10 @@ pipeline {
         failure {
             script {
                 // Get the email of the last commit author
-                def committerEmail = sh (
-                    script: "git log -1 --pretty=format:'%ae'",
-                    returnStdout: true
-                ).trim()
+                // def committerEmail = sh (
+                //     script: "git log -1 --pretty=format:'%ae'",
+                //     returnStdout: true
+                // ).trim()
 
                 // Send email to committer email
                 // mail to: committerEmail,
