@@ -44,14 +44,13 @@ pipeline {
             }
         }
 
-        
         stage("Run Code Quality Check (SonarQube)") {
             steps {
                 withSonarQubeEnv('sonar') {
-                    script {
-                        def scannerHome = tool 'sonar'
-                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=${DOCKER_IMAGE}"
-                    }
+                    sh """
+                        docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} ${GRADLEW} sonarqube \
+                            -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}
+                    """
                 }
             }
         }
