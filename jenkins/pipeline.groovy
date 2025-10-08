@@ -26,7 +26,7 @@ pipeline {
         stage('Linting') {
             steps {
                 // sh """
-                //     docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
+                //     docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
                 // """
             }
         }
@@ -34,7 +34,7 @@ pipeline {
         stage('Run JUnit Tests') {
             steps {
                 sh """
-                    docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} clean test
+                    docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} ${GRADLEW} clean test
                 """
             }
             // post {
