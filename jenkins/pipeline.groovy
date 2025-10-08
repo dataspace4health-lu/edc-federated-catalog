@@ -50,11 +50,11 @@ pipeline {
             }
         }
 
-        stage("Run Quality/Security Checks") {
+        stage("Run Quality/Security Scan") {
             parallel {
                 stage('SonarQube Analysis') {
                     environment {
-                        scannerHome = tool 'SonarQubeScanner'
+                        scannerHome = tool 'sonar'
                     }
                     steps {
                         withSonarQubeEnv('SonarQube') {
@@ -69,9 +69,8 @@ pipeline {
                 stage('Trivy Security Scan') {
                     steps {
                         sh """
-                            docker pull aquasec/trivy:latest
                             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
-                            image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}
+                                image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}
                         """
                     }
                 }
