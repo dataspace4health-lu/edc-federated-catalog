@@ -50,7 +50,7 @@ pipeline {
                 withSonarQubeEnv('sonar') {
                     script {
                         def scannerHome = tool 'sonar'
-                        sh "${scannerHome}/bin/sonar-scanner"
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=${DOCKER_IMAGE}"
                     }
                 }
             }
