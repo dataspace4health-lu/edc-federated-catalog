@@ -17,26 +17,24 @@ pipeline {
     }
 
     stages {
+        stage('Build Test Docker Image') {
+            steps {
+                sh "docker build --target builder -t ${IMAGE_NAME} ."
+            }
+        }
+        
         stage('Linting') {
             steps {
-                // sh """
-                //     docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
-                // """
-                sh 'chmod +x ./gradlew'
                 sh """
-                    ${GRADLEW} checkstyleMain checkstyleTest
+                    docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
                 """
             }
         }
         
         stage('Run JUnit Tests') {
             steps {
-                // sh """
-                //     docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} clean test
-                // """
-                sh 'chmod +x ./gradlew'
                 sh """
-                    ${GRADLEW} clean test
+                    docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} clean test
                 """
             }
             // post {
