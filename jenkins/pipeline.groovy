@@ -44,16 +44,14 @@ pipeline {
             }
         }
 
+        
         stage("Run Code Quality Check (SonarQube)") {
-            environment {
-                scannerHome = tool 'sonar'
-            }
             steps {
-                withSonarQubeEnv('sonar') { 
-                    def scannerHome = tool 'sonar'
-                    sh """
-                        ${scannerHome}/bin/sonar-scanner
-                    """
+                withSonarQubeEnv('sonar') {
+                    script {
+                        def scannerHome = tool 'sonar'
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
                 }
             }
         }
