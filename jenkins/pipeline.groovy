@@ -25,9 +25,9 @@ pipeline {
         
         stage('Linting') {
             steps {
-                // sh """
+                sh """
                 //     docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
-                // """
+                """
             }
         }
         
