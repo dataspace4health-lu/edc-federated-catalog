@@ -17,6 +17,13 @@ pipeline {
     }
 
     stages {
+        
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build Test Docker Image') {
             steps {
                 sh "docker build --target builder -t ${IMAGE_NAME} ."
