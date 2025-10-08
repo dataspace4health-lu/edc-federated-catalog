@@ -100,7 +100,8 @@ pipeline {
                 ).trim()
 
                 // Send email to committer email
-                mail to: committerEmail,
+                // mail to: committerEmail,
+                mail to: "${env.CHANGE_AUTHOR_EMAIL}",
                     subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                     body: """Hello,
 
