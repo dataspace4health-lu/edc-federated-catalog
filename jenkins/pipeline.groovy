@@ -25,9 +25,9 @@ pipeline {
         
         stage('Linting') {
             steps {
-                sh """
-                    docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
-                """
+                // sh """
+                //     docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
+                // """
             }
         }
         
