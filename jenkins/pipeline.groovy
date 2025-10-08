@@ -22,6 +22,7 @@ pipeline {
                 // sh """
                 //     docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
                 // """
+                sh 'chmod +x ./gradlew'
                 sh """
                     ${GRADLEW} checkstyleMain checkstyleTest
                 """
@@ -33,6 +34,7 @@ pipeline {
                 // sh """
                 //     docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} clean test
                 // """
+                sh 'chmod +x ./gradlew'
                 sh """
                     ${GRADLEW} clean test
                 """
