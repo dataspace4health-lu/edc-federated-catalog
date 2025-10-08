@@ -31,7 +31,7 @@ pipeline {
             }
         }
         
-        stage('Run JUnit Tests') {
+        stage('Run Tests') {
             steps {
                 sh """
                     docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} chmod +x ${GRADLEW} && ${GRADLEW} clean test
@@ -44,36 +44,32 @@ pipeline {
             }
         }
 
+        stage("Run Code Quality Check (SonarQube)") {
+            environment {
+                scannerHome = tool 'sonar'
+            }
+            steps {
+                withSonarQubeEnv('sonar') { 
+                    def scannerHome = tool 'sonar'
+                    sh """
+                        ${scannerHome}/bin/sonar-scanner
+                    """
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
-        stage("Run Quality/Security Scan") {
-            parallel {
-                stage('SonarQube Analysis') {
-                    environment {
-                        scannerHome = tool 'sonar'
-                    }
-                    steps {
-                        withSonarQubeEnv('SonarQube') {
-                            sh """
-                                docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} sonarqube \
-                                -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}
-                            """
-                        }
-                    }
-                }
-
-                stage('Trivy Security Scan') {
-                    steps {
-                        sh """
-                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
-                                image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}
-                        """
-                    }
-                }
+        stage("Run Security Scan (Trivy)") {
+            steps {
+                sh """
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
+                        image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}
+                """
             }
         }
 
@@ -94,6 +90,9 @@ pipeline {
     post {
         always {
             cleanWs()
+            sh """
+                docker rmi -f run ${IMAGE_NAME}
+            """
         }
         failure {
             script {
