@@ -97,16 +97,17 @@ pipeline {
             cleanWs()
         }
         failure {
-            // Get the email of the last commit author
-            def committerEmail = sh (
-                script: "git log -1 --pretty=format:'%ae'",
-                returnStdout: true
-            ).trim()
+            script {
+                // Get the email of the last commit author
+                def committerEmail = sh (
+                    script: "git log -1 --pretty=format:'%ae'",
+                    returnStdout: true
+                ).trim()
 
-            // Send email to committer email
-            mail to: committerEmail,
-                 subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: """Hello,
+                // Send email to committer email
+                mail to: committerEmail,
+                    subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: """Hello,
 
 The Jenkins build ${env.JOB_NAME} #${env.BUILD_NUMBER} has failed.
 
@@ -114,6 +115,7 @@ Please check the build logs here: ${env.BUILD_URL}
 
 Regards,
 Jenkins"""
+            }
         }
     }
 }
