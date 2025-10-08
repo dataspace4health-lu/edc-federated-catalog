@@ -17,28 +17,36 @@ pipeline {
     }
 
     stages {
-        // stage('Checkout') {
-        //     steps {
-        //         checkout scm
-        //     }
-        // }
+        stage('Linting') {
+            steps {
+                // sh """
+                //     docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
+                // """
+                sh """
+                    ${GRADLEW} checkstyleMain checkstyleTest
+                """
+            }
+        }
+        
+        stage('Run JUnit Tests') {
+            steps {
+                // sh """
+                //     docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} clean test
+                // """
+                sh """
+                    ${GRADLEW} clean test
+                """
+            }
+            // post {
+            //     always {
+            //         junit 'build/test-results/test/*.xml'
+            //     }
+            // }
+        }
 
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t ${IMAGE_NAME} ."
-            }
-        }
-
-        stage('Run JUnit Tests') {
-            steps {
-                sh """
-                    docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} clean test
-                """
-            }
-            post {
-                always {
-                    junit 'build/test-results/test/*.xml'
-                }
             }
         }
 
@@ -55,14 +63,6 @@ pipeline {
                                 -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}
                             """
                         }
-                    }
-                }
-
-                stage('Linting') {
-                    steps {
-                        sh """
-                            docker run --rm -v \$PWD:/app -w /app ${IMAGE_NAME} ${GRADLEW} checkstyleMain checkstyleTest
-                        """
                     }
                 }
 
