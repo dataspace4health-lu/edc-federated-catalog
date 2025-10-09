@@ -1,3 +1,5 @@
+project.setProperty("mainClassName", "org.eclipse.edc.boot.system.runtime.BaseRuntime")
+
 plugins {
     `java-library`
     id("checkstyle")
@@ -45,7 +47,6 @@ checkstyle {
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     mergeServiceFiles()
-    archiveFileName.set("federated-catalog.jar")
 }
 
 tasks.withType<Checkstyle> {

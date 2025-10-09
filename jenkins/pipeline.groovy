@@ -45,7 +45,7 @@ pipeline {
             steps {
                 sh """
                     docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
-                        chmod +x ${GRADLEW} && ${GRADLEW} clean test
+                        chmod +x ${GRADLEW} && ${GRADLEW} test
                 """
             }
             post {
@@ -64,7 +64,7 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner -X \
                                 -Dsonar.projectKey=${DOCKER_IMAGE} \
                                 -Dsonar.sources=. \
-                                -Dsonar.java.binaries=build/classes/java/main
+                                -Dsonar.java.binaries=extensions/**/build/classes/java/main
                         """
                     }
                 }
