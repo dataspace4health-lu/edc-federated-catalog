@@ -5,9 +5,7 @@ pipeline {
         DOCKER_IMAGE = "${env.JOB_NAME.tokenize('/').last().toLowerCase()}"
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         IMAGE_NAME = "${DOCKER_IMAGE}:${DOCKER_TAG}"
-
-        SONAR_HOST_URL = 'https://management.local/sonar'
-        SONAR_LOGIN = credentials('sonarqube-token')
+        COMMIT_AUTHOR = sh(script: "git show -s --pretty='%an <%ae>' ${GIT_COMMIT}", returnStdout: true).trim()
 
         GRADLEW = "./gradlew"
     }
@@ -64,7 +62,8 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner -X \
                                 -Dsonar.projectKey=${DOCKER_IMAGE} \
                                 -Dsonar.sources=. \
-                                -Dsonar.java.binaries=extensions/**/build/classes/java/main
+                                -Dsonar.java.binaries=extensions/**/build/classes/java/main \
+                                -Dsonar.java.libraries=build/libs,extensions/**/build/libs
                         """
                     }
                 }
@@ -107,17 +106,23 @@ pipeline {
                 docker rmi -f run ${IMAGE_NAME}
             """
         }
+        success {
+            script {
+                mail to: "${env.COMMIT_AUTHOR}",
+                    subject: "Build Succeeded: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: """Hello,
+
+The Jenkins build ${env.JOB_NAME} #${env.BUILD_NUMBER} has succeeded.
+
+Please check the build logs here: ${env.BUILD_URL}
+
+Regards,
+Jenkins"""
+            }
+        }
         failure {
             script {
-                // Get the email of the last commit author
-                // def committerEmail = sh (
-                //     script: "git log -1 --pretty=format:'%ae'",
-                //     returnStdout: true
-                // ).trim()
-
-                // Send email to committer email
-                // mail to: committerEmail,
-                mail to: "${env.CHANGE_AUTHOR_EMAIL}",
+                mail to: "${env.COMMIT_AUTHOR}",
                     subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                     body: """Hello,
 
