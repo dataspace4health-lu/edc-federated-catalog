@@ -1,5 +1,6 @@
 plugins {
     `java-library`
+    id("checkstyle")
     id("application")
     alias(libs.plugins.shadow)
 }
@@ -36,7 +37,19 @@ application {
     mainClass.set("org.eclipse.edc.boot.system.runtime.BaseRuntime")
 }
 
+checkstyle {
+    toolVersion = '10.12.1'
+    configFile = file('config/checkstyle/checkstyle.xml')
+}
+
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     mergeServiceFiles()
     archiveFileName.set("federated-catalog.jar")
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.required = false
+        html.required = true
+    }
 }

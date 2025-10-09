@@ -17,24 +17,35 @@ pipeline {
     }
 
     stages {
-        stage('Build Test Docker Image') {
+        stage('Building') {
             steps {
-                sh "docker build --target builder -t ${IMAGE_NAME} ."
+                sh """
+                    docker build --target builder -t ${IMAGE_NAME} .
+                    docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
+                        chmod +x ${GRADLEW} && ${GRADLEW} shadowJar --no-daemon -x test
+                """
             }
         }
         
         stage('Linting') {
             steps {
                 sh """
-                    # docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} chmod +x ${GRADLEW} && ${GRADLEW} checkstyleMain checkstyleTest
+                    docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
+                        chmod +x ${GRADLEW} && ${GRADLEW} checkstyleMain checkstyleTest
                 """
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: '**/build/reports/checkstyle/*.html', allowEmptyArchive: true
+                }
             }
         }
         
         stage('Run Tests') {
             steps {
                 sh """
-                    docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} chmod +x ${GRADLEW} && ${GRADLEW} clean test
+                    docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
+                        chmod +x ${GRADLEW} && ${GRADLEW} clean test
                 """
             }
             post {
