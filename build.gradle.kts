@@ -38,8 +38,9 @@ application {
 }
 
 checkstyle {
-    toolVersion = '10.12.1'
-    configFile = file('config/checkstyle/checkstyle.xml')
+    toolVersion = "10.12.1"
+    configFile = file("config/checkstyle/checkstyle.xml")
+     isShowViolations = true
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
@@ -47,9 +48,9 @@ tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     archiveFileName.set("federated-catalog.jar")
 }
 
-tasks.withType(Checkstyle) {
+tasks.withType<Checkstyle> {
     reports {
-        xml.required = false
-        html.required = true
+        xml.required.set(false)
+        html.required.set(true)
     }
 }
