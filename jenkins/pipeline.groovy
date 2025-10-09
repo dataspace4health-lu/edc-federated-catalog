@@ -17,7 +17,7 @@ pipeline {
     }
 
     stages {
-        stage('Building') {
+        stage('Build') {
             steps {
                 sh """
                     docker build --target builder -t ${IMAGE_NAME} .
@@ -27,7 +27,7 @@ pipeline {
             }
         }
         
-        stage('Linting') {
+        stage('Lint') {
             steps {
                 sh """
                     docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
@@ -41,7 +41,7 @@ pipeline {
             }
         }
         
-        stage('Run Tests') {
+        stage('Test') {
             steps {
                 sh """
                     docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
@@ -55,13 +55,21 @@ pipeline {
             }
         }
 
-        stage("Run Code Quality Check (SonarQube)") {
+        stage("Code Quality Check (SonarQube)") {
             steps {
                 withSonarQubeEnv('sonar') {
+                    // sh """
+                    //     docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} ${GRADLEW} sonarqube \
+                    //         -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}
+                    // """
+                    
+                    def scannerHome = tool 'sonar'
                     sh """
-                        docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} ${GRADLEW} sonarqube \
-                            -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_LOGIN}
+                        ${scannerHome}/bin/sonar-scanner -X \
+                            -Dsonar.projectKey=${DOCKER_IMAGE} \
+                            -Dsonar.sources=. \
                     """
+
                 }
             }
         }
@@ -72,7 +80,7 @@ pipeline {
             }
         }
 
-        stage("Run Security Scan (Trivy)") {
+        stage("Security Scan (Trivy)") {
             steps {
                 sh """
                     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
