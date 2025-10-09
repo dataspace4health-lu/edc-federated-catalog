@@ -106,8 +106,8 @@ pipeline {
                 docker rmi -f run ${IMAGE_NAME}
             """
         }
-        success {
-// TODO: Need SMTP configuration in Jenkins
+//        success {
+// // TODO: Need SMTP configuration in Jenkins
 //             script {
 //                 mail to: "${env.COMMIT_AUTHOR}",
 //                     subject: "Build Succeeded: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
@@ -120,9 +120,9 @@ pipeline {
 // Regards,
 // Jenkins"""
 //             }
-        }
-        failure {
-// TODO: Need SMTP configuration in Jenkins
+//        }
+//        failure {
+// // TODO: Need SMTP configuration in Jenkins
 //             script {
 //                 mail to: "${env.COMMIT_AUTHOR}",
 //                     subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
@@ -135,6 +135,6 @@ pipeline {
 // Regards,
 // Jenkins"""
 //             }
-        }
+//        }
     }
 }
