@@ -58,13 +58,14 @@ pipeline {
         stage("Code Quality Check (SonarQube)") {
             steps {
                 withSonarQubeEnv('sonar') {
-                    def scannerHome = tool 'sonar'
-                    sh """
-                        ${scannerHome}/bin/sonar-scanner -X \
-                            -Dsonar.projectKey=${DOCKER_IMAGE} \
-                            -Dsonar.sources=. \
-                    """
-
+                    script {
+                        def scannerHome = tool "sonar"
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner -X \
+                                -Dsonar.projectKey=${DOCKER_IMAGE} \
+                                -Dsonar.sources=. \
+                        """
+                    }
                 }
             }
         }
