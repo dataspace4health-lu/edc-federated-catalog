@@ -15,19 +15,10 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
-            steps {
-                sh """
-                    docker build --target builder -t ${IMAGE_NAME} .
-                    docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
-                        chmod +x ${GRADLEW} && ${GRADLEW} shadowJar --no-daemon -x test
-                """
-            }
-        }
-        
         stage('Lint') {
             steps {
                 sh """
+                    docker build --target builder -t ${IMAGE_NAME} .
                     docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
                         chmod +x ${GRADLEW} && ${GRADLEW} checkstyleMain checkstyleTest
                 """
@@ -36,6 +27,15 @@ pipeline {
                 always {
                     archiveArtifacts artifacts: 'build/reports/checkstyle/*.html', allowEmptyArchive: true
                 }
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh """
+                    docker run --rm -v \$PWD:/workspace -w /workspace ${IMAGE_NAME} \
+                        chmod +x ${GRADLEW} && ${GRADLEW} shadowJar --no-daemon -x test
+                """
             }
         }
         
