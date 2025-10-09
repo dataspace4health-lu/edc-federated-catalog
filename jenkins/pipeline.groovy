@@ -36,7 +36,7 @@ pipeline {
             }
             post {
                 always {
-                    archiveArtifacts artifacts: '**/build/reports/checkstyle/*.html', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'build/reports/checkstyle/*.html', allowEmptyArchive: true
                 }
             }
         }
@@ -64,6 +64,7 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner -X \
                                 -Dsonar.projectKey=${DOCKER_IMAGE} \
                                 -Dsonar.sources=. \
+                                -Dsonar.java.binaries=build/classes/java/main
                         """
                     }
                 }
