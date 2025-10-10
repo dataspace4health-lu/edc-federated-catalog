@@ -3,6 +3,8 @@ package org.eclipse.edc.extensions.federatedcatalog.noderesolver;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import org.eclipse.edc.crawler.spi.TargetNode;
 import org.eclipse.edc.crawler.spi.TargetNodeDirectory;
 import org.eclipse.edc.spi.EdcException;
@@ -21,7 +23,6 @@ public class CatalogNodeDirectory implements TargetNodeDirectory {
     private final ObjectMapper mapper;
     private final File participantListFile;
     private final Monitor monitor;
-
 
     @Override
     public List<TargetNode> getAll() {
@@ -42,7 +43,7 @@ public class CatalogNodeDirectory implements TargetNodeDirectory {
     }
 
     @Override
-    public TargetNode remove(String s) {
+    public TargetNode remove(String id) {
         return null;
     }
 

@@ -17,6 +17,9 @@ allprojects {
 }
 
 dependencies {
+    compileOnly("org.projectlombok:lombok:1.18.26")
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
+    compileOnly(libs.edc.fc.spi.crawler)
 
     implementation(libs.edc.runtime.core)
     implementation(libs.edc.connector.core)
@@ -39,10 +42,27 @@ application {
     mainClass.set("org.eclipse.edc.boot.system.runtime.BaseRuntime")
 }
 
+sourceSets {
+    main {
+        java {
+            // First, clear default srcDirs by removing them one by one
+            setSrcDirs(emptySet<File>())
+
+            // Find all directories named 'src' under 'extensions/**/src'
+            val srcFolders = file("extensions").walkTopDown()
+                .filter { it.isDirectory && it.name == "src" }
+                .toSet()
+
+            // Add those directories as source dirs
+            setSrcDirs(srcFolders)
+        }
+    }
+}
+
 checkstyle {
-    toolVersion = "10.12.1"
+    toolVersion = "12.0.0"
     configFile = file("config/checkstyle/checkstyle.xml")
-     isShowViolations = true
+    isShowViolations = true
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {

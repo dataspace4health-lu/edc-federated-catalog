@@ -1,2 +1,3 @@
 .gradle
-extensions/catalog-node-resolver/build
+**/bin
+**/build
