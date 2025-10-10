@@ -76,3 +76,11 @@ tasks.withType<Checkstyle> {
         html.outputLocation.set(file("$buildDir/reports/checkstyle/lint.html"))
     }
 }
+
+tasks.test {
+    // Change the directory for HTML reports
+    reports.html.outputLocation.set(file("$buildDir/test-results/html/test.html"))
+
+    // Change the directory for JUnit XML test results
+    reports.junitXml.outputLocation.set(file("$buildDir/test-results/xml/test.xml"))
+}
