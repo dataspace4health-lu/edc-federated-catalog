@@ -1,4 +1,3 @@
 .gradle
-trivy
 **/bin
 **/build
