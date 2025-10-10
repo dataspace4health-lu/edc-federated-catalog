@@ -78,32 +78,11 @@ pipeline {
 
         stage("Security Scan (Trivy)") {
             steps {
-                // Write the template file into the workspace
-        writeFile file: "trivy-html.tpl", text: """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Trivy Scan Report</title>
-</head>
-<body>
-    <h1>Trivy Scan Report</h1>
-    {{ range .Results }}
-        <h2>Target: {{ .Target }}</h2>
-        <ul>
-            {{ range .Vulnerabilities }}
-                <li><strong>{{ .VulnerabilityID }}</strong>: {{ .PkgName }} - {{ .Severity }}</li>
-            {{ end }}
-        </ul>
-    {{ end }}
-</body>
-</html>
-"""
-
                 sh """
                     docker run --rm \
                         -v /var/run/docker.sock:/var/run/docker.sock \
                         -v \$PWD/built/reports/trivy:/output \
-                        -v \$PWD/trivy-html.tpl:/template.tpl \
+                        -v \$PWD/jenkins/trivy-html.tpl:/template.tpl \
                         aquasec/trivy:latest \
                         image ${IMAGE_NAME} \
                         --exit-code 1 --timeout 15m --severity HIGH,CRITICAL \
