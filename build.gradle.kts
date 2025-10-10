@@ -73,5 +73,6 @@ tasks.withType<Checkstyle> {
     reports {
         xml.required.set(false)
         html.required.set(true)
+        html.outputLocation.set(file("$buildDir/reports/checkstyle/lint.html"))
     }
 }
