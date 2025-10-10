@@ -84,9 +84,9 @@ pipeline {
                         -v \$PWD/built/reports/trivy:/output \
                         -v \$PWD/jenkins/trivy-html.tpl:/template.tpl \
                         aquasec/trivy:latest \
-                        ${IMAGE_NAME} \
                         image --exit-code 1 --timeout 15m --severity HIGH,CRITICAL \
-                        --format template --template "@/template.tpl" --output /output/trivy.html
+                        --format template --template "@/template.tpl" --output /output/trivy.html \
+                        ${IMAGE_NAME}
                 """
             }
             post {
