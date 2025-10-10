@@ -107,6 +107,9 @@ pipeline {
     post {
         always {
             cleanWs()
+            sh """
+                docker rmi -f ${IMAGE_NAME}
+            """
         }
 //        success {
 // // TODO: Need SMTP configuration in Jenkins
