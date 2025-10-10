@@ -79,13 +79,13 @@ pipeline {
         stage("Security Scan (Trivy)") {
             steps {
                 sh """
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \$PWD/trivy:/report aquasec/trivy:latest \
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v \$PWD/built/reports/trivy:/report aquasec/trivy:latest \
                         image --exit-code 1 --timeout 15m --severity HIGH,CRITICAL ${IMAGE_NAME}
                 """
             }
             post {
                 always {
-                    archiveArtifacts 'trivy/trivy.json'
+                    archiveArtifacts 'built/reports/trivy/trivy.json'
                 }
             }
         }
@@ -107,9 +107,6 @@ pipeline {
     post {
         always {
             cleanWs()
-            sh """
-                docker rmi -f run ${IMAGE_NAME}
-            """
         }
 //        success {
 // // TODO: Need SMTP configuration in Jenkins
