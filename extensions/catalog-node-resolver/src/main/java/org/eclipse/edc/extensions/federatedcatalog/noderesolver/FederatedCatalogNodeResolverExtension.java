@@ -40,6 +40,19 @@ public class FederatedCatalogNodeResolverExtension implements ServiceExtension {
             monitor.warning("Path '%s' does not exist. It must be a resolvable path with read access. Will not add any VCs.".formatted(PARTICIPANT_LIST_FILE_PATH));
         }
 
+        // --- DB CONNECTION TEST ---
+        String dbUrl = System.getenv("POSTGRES_URL");
+        String dbUser = System.getenv("POSTGRES_USER");
+        String dbPassword = System.getenv("POSTGRES_PASSWORD");
+
+        if (dbUrl == null || dbUser == null || dbPassword == null) {
+            monitor.severe("Database environment variables are not set. Ensure POSTGRES_URL, POSTGRES_USER, and POSTGRES_PASSWORD are configured.");
+            throw new IllegalStateException("Missing required database environment variables.");
+        }
+
+        PostgresConnector connector = new PostgresConnector(dbUrl, dbUser, dbPassword, monitor);
+        connector.testConnection();
+
         monitor.info(NAME + " initialized...");
     }
 

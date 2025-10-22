@@ -33,7 +33,7 @@ dependencies {
     implementation(libs.edc.api.observability)
 
     implementation(project(":extensions:catalog-node-resolver"))
-    
+    implementation("org.postgresql:postgresql:42.7.3")
     runtimeOnly(libs.edc.api.observability)
 
 }
