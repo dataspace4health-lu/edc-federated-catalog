@@ -33,30 +33,13 @@ dependencies {
     implementation(libs.edc.api.observability)
 
     implementation(project(":extensions:catalog-node-resolver"))
+    implementation(project(":extensions:store:sql:participant-store-sql")) // ADD THIS LINE
     implementation("org.postgresql:postgresql:42.7.3")
     runtimeOnly(libs.edc.api.observability)
-
 }
 
 application {
     mainClass.set("org.eclipse.edc.boot.system.runtime.BaseRuntime")
-}
-
-sourceSets {
-    main {
-        java {
-            // First, clear default srcDirs by removing them one by one
-            setSrcDirs(emptySet<File>())
-
-            // Find all directories named 'src' under 'extensions/**/src'
-            val srcFolders = file("extensions").walkTopDown()
-                .filter { it.isDirectory && it.name == "src" }
-                .toSet()
-
-            // Add those directories as source dirs
-            setSrcDirs(srcFolders)
-        }
-    }
 }
 
 checkstyle {
@@ -78,9 +61,6 @@ tasks.withType<Checkstyle> {
 }
 
 tasks.test {
-    // Change the directory for HTML reports
     reports.html.outputLocation.set(file("$buildDir/test-results/html/test.html"))
-
-    // Change the directory for JUnit XML test results
     reports.junitXml.outputLocation.set(file("$buildDir/test-results/xml/test.xml"))
 }
