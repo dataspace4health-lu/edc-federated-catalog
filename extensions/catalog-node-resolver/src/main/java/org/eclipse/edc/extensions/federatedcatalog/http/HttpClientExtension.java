@@ -38,6 +38,7 @@ public class HttpClientExtension implements ServiceExtension {
         }
     }
 
+    @SuppressWarnings({"java:S4830", "java:S5527"}) // TLS and hostname verification disabled only if DISABLE_TLS_CONFIG is true 
     private OkHttpClient createInsecureClient() {
         try {
             // Trust manager that does not validate certificate chains
