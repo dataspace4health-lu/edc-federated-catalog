@@ -57,6 +57,11 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar') {
                     script {
+                        echo "Current branch: ${env.BRANCH_NAME}"
+                        echo "Current branch: ${env.GIT_BRANCH}"
+                        def branch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+                        echo "Current branch: ${branch}"
+                        
                         def scannerHome = tool "sonar"
                         sh """
                             ${scannerHome}/bin/sonar-scanner -X \
