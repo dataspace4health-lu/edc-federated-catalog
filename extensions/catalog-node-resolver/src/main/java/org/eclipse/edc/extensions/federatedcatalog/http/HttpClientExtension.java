@@ -21,7 +21,7 @@ public class HttpClientExtension implements ServiceExtension {
         boolean disableTls = context.getConfig().getBoolean(DISABLE_TLS_CONFIG, false);
 
         if (disableTls) {
-            monitor.warning("TLS and hostname verification are DISABLED for HTTP clients! Do not use in production environments.");
+            monitor.warning("WARNING: TLS and hostname verification are DISABLED for HTTP clients! This should only be used in development or testing environments, and NEVER in production.");
         } else {
             monitor.info("TLS and hostname verification are ENABLED for HTTP clients.");
         }
@@ -45,8 +45,13 @@ public class HttpClientExtension implements ServiceExtension {
 
     /**
      * Creates an insecure OkHttpClient that trusts all certificates.
-     * This should only be used in non-production environments.
+     * <p>
+     * This should only be used in non-production environments for testing purposes. It disables all server
+     * certificate validation and hostname verification, which makes it vulnerable to man-in-the-middle (MitM) attacks.
+     * NEVER use this in production environments!
+     * </p>
      */
+    @SuppressWarnings("java:S4830")  // Suppresses SonarQube rule for insecure SSL/TLS usage
     private OkHttpClient createInsecureClient() throws GeneralSecurityException {
         // Trust manager that does not validate certificate chains
         TrustManager[] trustAllCerts = new TrustManager[]{
