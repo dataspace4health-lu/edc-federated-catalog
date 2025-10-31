@@ -51,7 +51,7 @@ public class HttpClientExtension implements ServiceExtension {
      * NEVER use this in production environments!
      * </p>
      */
-    @SuppressWarnings({"java:S4830", "java:S4830"})  // Suppresses SonarQube rule for insecure SSL/TLS usage and hostname validation
+    @SuppressWarnings({"java:S4830", "java:S5527"})  // Suppresses SonarQube rule for insecure SSL/TLS usage and hostname validation
     private OkHttpClient createInsecureClient() throws GeneralSecurityException {
         // Trust manager that does not validate certificate chains
         TrustManager[] trustAllCerts = new TrustManager[]{
