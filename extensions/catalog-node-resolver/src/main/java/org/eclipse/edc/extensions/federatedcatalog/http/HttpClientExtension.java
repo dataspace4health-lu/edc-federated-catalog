@@ -7,6 +7,7 @@ import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 
 import javax.net.ssl.*;
+import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 
 @Extension(value = "Configurable HTTP Client Extension")
@@ -31,37 +32,50 @@ public class HttpClientExtension implements ServiceExtension {
         boolean disableTls = context.getConfig().getBoolean(DISABLE_TLS_CONFIG, false);
 
         if (disableTls) {
-            return createInsecureClient();
+            try {
+                return createInsecureClient();
+            } catch (GeneralSecurityException e) {
+                throw new IllegalStateException("Failed to initialize insecure HTTP client", e);
+            }
         } else {
             // Default secure client
             return new OkHttpClient();
         }
     }
 
-    @SuppressWarnings({"java:S4830", "java:S5527"}) // TLS and hostname verification disabled only if DISABLE_TLS_CONFIG is true 
-    private OkHttpClient createInsecureClient() {
-        try {
-            // Trust manager that does not validate certificate chains
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                    new X509TrustManager() {
-                        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
-                        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
-                        public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
-                    }
-            };
+    /**
+     * Creates an insecure OkHttpClient that trusts all certificates.
+     * This should only be used in non-production environments.
+     */
+    private OkHttpClient createInsecureClient() throws GeneralSecurityException {
+        // Trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain, String authType) {
+                    // Intentionally left blank: skip client check
+                }
 
-            // Install the all-trusting trust manager
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain, String authType) {
+                    // Intentionally left blank: skip server check
+                }
 
-            return new OkHttpClient.Builder()
-                    .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
-                    .hostnameVerifier((hostname, session) -> true)
-                    .build();
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
+                }
+            }
+        };
 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create insecure HTTP client", e);
-        }
+        // Install the all-trusting trust manager
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+        SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+        return new OkHttpClient.Builder()
+                .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+                .hostnameVerifier((hostname, session) -> true)
+                .build();
     }
 }
