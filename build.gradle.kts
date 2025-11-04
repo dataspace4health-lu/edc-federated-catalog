@@ -1,11 +1,11 @@
-project.setProperty("mainClassName", "org.eclipse.edc.boot.system.runtime.BaseRuntime")
-
 plugins {
     `java-library`
     id("checkstyle")
     id("application")
     alias(libs.plugins.shadow)
 }
+
+version = ""
 
 allprojects {
     repositories {
@@ -67,6 +67,7 @@ checkstyle {
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     mergeServiceFiles()
+    archiveClassifier.set("")
 }
 
 tasks.withType<Checkstyle> {
