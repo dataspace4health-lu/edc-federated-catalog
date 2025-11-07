@@ -25,7 +25,6 @@ dependencies {
     implementation(libs.edc.connector.core)
     implementation(libs.edc.boot)
     implementation(libs.edc.control.plane.core)
-    implementation(libs.edc.configuration.filesystem)
     implementation(libs.edc.token.core)
     implementation(libs.edc.http)
     implementation(libs.edc.dsp)

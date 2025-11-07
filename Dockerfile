@@ -3,7 +3,7 @@ FROM gradle:8.8-jdk17 AS builder
 WORKDIR /workspace
 
 # Copy Gradle wrapper & config first for caching
-COPY build.gradle.kts settings.gradle.kts gradlew config.properties ./
+COPY build.gradle.kts settings.gradle.kts gradlew ./
 COPY gradle ./gradle
 
 # Make gradlew executable
@@ -29,9 +29,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy only the fat jar and configs from builder
 COPY --from=builder /workspace/build/libs/*.jar /app/federated-catalog.jar
-COPY --from=builder /workspace/config.properties /app/config.properties
 
 USER 65534
 
 # Run the jar with config + logging
-CMD ["java", "-Dedc.fs.config=/app/config.properties", "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug", "-jar", "/app/federated-catalog.jar"]
+CMD ["java", "-jar", "/app/federated-catalog.jar"]
