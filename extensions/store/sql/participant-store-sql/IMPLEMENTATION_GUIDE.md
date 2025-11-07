@@ -1,7 +1,7 @@
 # SQL Participant Store Implementation
 
 ## Overview
-This implementation follows EDC (Eclipse Dataspace Connector) best practices for SQL-based stores, using the same patterns as the Connector's store implementations.
+This implementation provides a SQL-based participant store compatible with EDC 0.13.0, using direct JDBC connections for schema initialization while maintaining EDC's transaction management for operations.
 
 ## Architecture
 
@@ -10,13 +10,12 @@ This implementation follows EDC (Eclipse Dataspace Connector) best practices for
 1. **ParticipantStore (Interface)** - `/src/main/java/.../ParticipantStore.java`
    - Defines the contract for participant storage operations
    - Uses EDC's `StoreResult` pattern for error handling
-   - Returns `Stream` for query results (following EDC patterns)
+   - Returns `Stream` for query results
 
 2. **SqlParticipantStore** - `/src/main/java/.../SqlParticipantStore.java`
-   - Extends `AbstractSqlStore` from EDC
-   - Implements CRUD operations with proper transaction management
-   - Uses `QueryExecutor` for safe SQL execution
-   - Handles connection management via `DataSourceRegistry`
+   - Implements CRUD operations with transaction support
+   - Uses `DataSourceRegistry` for connection management
+   - Includes proper error handling and logging
 
 3. **ParticipantStatements (Interface)** - `/src/main/java/.../schema/ParticipantStatements.java`
    - Defines SQL statement templates
@@ -24,12 +23,12 @@ This implementation follows EDC (Eclipse Dataspace Connector) best practices for
 
 4. **PostgresDialectStatements** - `/src/main/java/.../schema/postgres/PostgresDialectStatements.java`
    - PostgreSQL-specific SQL implementations
-   - Can be extended for other databases (MySQL, H2, etc.)
+   - Can be extended for other databases
 
 5. **ParticipantStoreExtension** - `/src/main/java/.../ParticipantStoreExtension.java`
    - ServiceExtension that initializes the store
-   - Registers the schema bootstrapper
-   - Injects required EDC services
+   - Uses direct JDBC for schema initialization
+   - Handles configuration and monitoring
 
 ## Database Schema
 
@@ -50,60 +49,76 @@ Indexes:
 
 ## Configuration
 
-The store uses EDC's standard datasource configuration:
+The store uses standard JDBC configuration via EDC properties:
 
 ```properties
-# Default datasource (automatically used)
-edc.datasource.default.url=${EDC_DATASOURCE_DEFAULT_URL}
-edc.datasource.default.user=${EDC_DATASOURCE_DEFAULT_USER}
-edc.datasource.default.password=${EDC_DATASOURCE_DEFAULT_PASSWORD}
-
-# Optional: Use a different datasource for participants
-edc.sql.store.participant.datasource=participant
+# Database Connection
+edc.datasource.default.url=jdbc:postgresql://localhost:5432/your_db
+edc.datasource.default.user=your_user
+edc.datasource.default.password=your_password
 ```
 
 ## Key Benefits
 
-1. **Automatic Schema Management**: Schema is created/updated on startup via `SqlSchemaBootstrapper`
-2. **Transaction Safety**: All operations wrapped in transactions via `TransactionContext`
-3. **Connection Pooling**: Handled by `DataSourceRegistry`
-4. **Consistent Error Handling**: Uses EDC's `StoreResult` pattern
+1. **Simple Schema Management**: Direct JDBC initialization ensures reliable table creation
+2. **Transaction Safety**: Operations wrapped in EDC's TransactionContext
+3. **Connection Management**: Uses EDC's DataSourceRegistry
+4. **Error Handling**: Proper error handling with detailed logging
 5. **Database Portability**: Easy to add support for other databases
-6. **Testability**: Can inject test implementations easily
+6. **Monitoring**: Integrated with EDC's monitoring system
 
-## Usage Example
+## Testing
 
-```java
-@Inject
-private ParticipantStore participantStore;
+### Manual Testing API
 
-// Save a participant
-var participant = Participant.builder()
-    .id("participant-1")
-    .name("Test Participant")
-    .endpoint("https://example.com/dsp")
-    .supportedProtocols(List.of("dataspace-protocol-http"))
-    .build();
+The extension provides a REST API for testing:
 
-StoreResult<Void> result = participantStore.save(participant);
-if (result.succeeded()) {
-    // Success
-} else {
-    // Handle error: result.getFailureDetail()
-}
+```bash
+# Create participant
+curl -X POST http://localhost:8181/api/participants \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "participant1",
+    "name": "Test Participant",
+    "endpoint": "http://test-participant:8181",
+    "supportedProtocols": ["ids-multipart", "dsp"]
+  }'
 
-// Find all participants
-Stream<Participant> participants = participantStore.findAll();
+# Get participant
+curl http://localhost:8181/api/participants/participant1
 
-// Find by ID
-Participant found = participantStore.findById("participant-1");
+# Get all participants
+curl http://localhost:8181/api/participants
 
-// Update
-participant.setName("Updated Name");
-StoreResult<Void> updateResult = participantStore.update(participant);
+# Update participant
+curl -X PUT http://localhost:8181/api/participants/participant1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "participant1",
+    "name": "Updated Participant",
+    "endpoint": "http://updated-endpoint:8181",
+    "supportedProtocols": ["dsp"]
+  }'
 
-// Delete
-StoreResult<Participant> deleteResult = participantStore.delete("participant-1");
+# Delete participant
+curl -X DELETE http://localhost:8181/api/participants/participant1
+```
+
+### Database Verification
+
+Connect to PostgreSQL pod:
+```bash
+kubectl exec -it edc-fc-catalog-postgresql-0 -- bash
+psql -U postgres
+```
+
+Query the table:
+```sql
+-- List all participants
+SELECT * FROM edc_participant;
+
+-- Check specific participant
+SELECT * FROM edc_participant WHERE participant_id = 'participant1';
 ```
 
 ## Dependencies
@@ -111,47 +126,63 @@ StoreResult<Participant> deleteResult = participantStore.delete("participant-1")
 ```kotlin
 dependencies {
     implementation(libs.edc.core.spi)
-    implementation(libs.edc.sql.core)
-    implementation(libs.edc.sql.bootstrapper)
-    implementation(libs.edc.spi.transaction.datasource)
+    implementation(libs.edc.transaction.spi)
+    implementation(libs.edc.transactions.datasource.spi)
     implementation(libs.postgres)
 }
 ```
 
-## Files Created/Modified
+## Files Structure
 
-### New Files:
-- `src/main/resources/participant-schema.sql` - Database schema
-- `src/main/java/.../SqlParticipantStore.java` - Store implementation
-- `src/main/java/.../schema/ParticipantStatements.java` - SQL statements interface
-- `src/main/java/.../schema/postgres/PostgresDialectStatements.java` - PostgreSQL implementation
-
-### Modified Files:
-- `ParticipantStore.java` - Updated interface with StoreResult pattern
-- `ParticipantStoreExtension.java` - Rewritten to follow EDC patterns
-- `build.gradle.kts` - Updated dependencies
-
-### Deleted Files:
-- `DatabaseConnectionManager.java` - No longer needed (replaced by DataSourceRegistry)
-- `SimpleParticipantStore.java` - Replaced by SqlParticipantStore
+### Core Files:
+```
+participant-store-sql/
+├── src/main/
+│   ├── java/.../store/sql/
+│   │   ├── Participant.java
+│   │   ├── ParticipantStore.java
+│   │   ├── SqlParticipantStore.java
+│   │   ├── ParticipantStoreExtension.java
+│   │   └── schema/
+│   │       ├── ParticipantStatements.java
+│   │       └── postgres/
+│   │           └── PostgresDialectStatements.java
+│   └── resources/
+│       ├── participant-schema.sql
+│       └── META-INF/services/
+│           └── org.eclipse.edc.spi.system.ServiceExtension
+```
 
 ## Next Steps
 
-To use this in your federated catalog:
+1. **Deploy the Extension**:
+   - Include the extension in your EDC build
+   - Configure database connection properties
+   - Deploy to your Kubernetes cluster
 
-1. **Ensure datasource is configured** in your launcher's `config.properties`:
-   ```properties
-   edc.datasource.default.url=jdbc:postgresql://localhost:5432/your_db
-   edc.datasource.default.user=your_user
-   edc.datasource.default.password=your_password
-   ```
+2. **Verify Installation**:
+   - Check logs for successful schema initialization
+   - Use the test API to verify CRUD operations
+   - Query PostgreSQL to confirm data persistence
 
-2. **Include required EDC modules** in your launcher's `build.gradle.kts`:
-   ```kotlin
-   implementation(libs.edc.sql.pool)  // Connection pooling
-   implementation(libs.edc.sql.transactionlocal)  // Transaction management
-   ```
+3. **Integration**:
+   - Inject `ParticipantStore` into your extensions
+   - Replace file-based participant storage with database storage
+   - Update existing code to use the new store
 
-3. **The table will be created automatically** when the extension initializes
+## Troubleshooting
 
-4. **Inject and use** the ParticipantStore in your extensions
+1. **Table Not Created**:
+   - Check logs for schema initialization messages
+   - Verify database connection properties
+   - Check PostgreSQL logs for errors
+
+2. **Connection Issues**:
+   - Verify database credentials
+   - Check network connectivity
+   - Ensure PostgreSQL pod is running
+
+3. **Transaction Errors**:
+   - Check TransactionContext registration
+   - Verify DataSourceRegistry configuration
+   - Monitor connection pool usage
