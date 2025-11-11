@@ -16,6 +16,7 @@ package org.eclipse.edc.extensions.federatedcatalog.store.sql.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
@@ -23,11 +24,21 @@ import java.util.List;
  * Data Transfer Object for Participant API operations.
  * Contains only the DSP link as per requirements.
  */
+@Schema(description = "Represents a participant in the Federated Catalogue")
 public class ParticipantDto {
     
+    @Schema(description = "Unique identifier of the participant", example = "participant-001", required = true)
     private String id;
+    
+    @Schema(description = "Human-readable name of the participant", example = "ACME Corporation", required = true)
     private String name;
+    
+    @Schema(description = "DSP (Dataspace Protocol) endpoint URL of the participant", 
+            example = "https://participant.example.com/api/dsp", required = true)
     private String dspUrl;  // DSP link endpoint
+    
+    @Schema(description = "List of supported protocols", 
+            example = "[\"dataspace-protocol-http\"]")
     private List<String> supportedProtocols;
     
     @JsonCreator

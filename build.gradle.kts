@@ -40,6 +40,10 @@ dependencies {
     implementation(project(":extensions:catalog-node-resolver"))
     implementation(project(":extensions:store:sql:participant-store-sql"))
     
+    // Swagger dependencies for API documentation
+    implementation("io.swagger.core.v3:swagger-annotations-jakarta:2.2.20")
+    implementation("org.webjars:swagger-ui:5.10.3")
+    
     runtimeOnly(libs.edc.api.observability)
 
 }

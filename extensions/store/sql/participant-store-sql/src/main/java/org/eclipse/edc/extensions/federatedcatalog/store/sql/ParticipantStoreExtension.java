@@ -15,6 +15,7 @@
 package org.eclipse.edc.extensions.federatedcatalog.store.sql;
 
 import org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ParticipantRegistryApiController;
+import org.eclipse.edc.extensions.federatedcatalog.store.sql.api.SwaggerController;
 import org.eclipse.edc.extensions.federatedcatalog.store.sql.schema.ParticipantStatements;
 import org.eclipse.edc.extensions.federatedcatalog.store.sql.schema.postgres.PostgresDialectStatements;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
@@ -87,7 +88,16 @@ public class ParticipantStoreExtension implements ServiceExtension {
         var apiController = new ParticipantRegistryApiController(participantStore, monitor);
         webService.registerResource("catalog", apiController);
         
+        // Get the catalog path from configuration
+        String catalogPath = context.getConfig().getString("web.http.catalog.path", "/api/catalog");
+        monitor.info("SQL Participant Store: Using catalog path: " + catalogPath);
+        
+        // Register Swagger UI controller with base path
+        var swaggerController = new SwaggerController(catalogPath);
+        webService.registerResource("catalog", swaggerController);
+        
         monitor.info("SQL Participant Store: Participant Registry API registered successfully on 'catalog' context");
+        monitor.info("SQL Participant Store: Swagger UI available at " + catalogPath + "/swagger/");
     }
     
     @Provider

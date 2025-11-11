@@ -16,22 +16,29 @@ package org.eclipse.edc.extensions.federatedcatalog.store.sql.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Standard API response wrapper for consistent error handling.
  */
+@Schema(description = "Standard API response wrapper")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
     
+    @Schema(description = "Indicates whether the operation was successful", example = "true")
     @JsonProperty("success")
     private boolean success;
     
+    @Schema(description = "Response data payload")
     @JsonProperty("data")
     private T data;
     
+    @Schema(description = "Error code if operation failed", example = "VALIDATION_ERROR")
     @JsonProperty("error")
     private String error;
     
+    @Schema(description = "Human-readable message about the operation result", 
+            example = "Participant created successfully")
     @JsonProperty("message")
     private String message;
     

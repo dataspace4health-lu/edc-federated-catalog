@@ -37,7 +37,7 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/participants")
-public class ParticipantRegistryApiController {
+public class ParticipantRegistryApiController implements ParticipantRegistryApi {
     
     private final ParticipantStore store;
     private final Monitor monitor;
@@ -47,6 +47,7 @@ public class ParticipantRegistryApiController {
         this.monitor = monitor;
     }
     
+    @Override
     @POST
     @Path("/")
     public Response createParticipant(ParticipantDto dto) {
@@ -104,6 +105,7 @@ public class ParticipantRegistryApiController {
         }
     }
     
+    @Override
     @GET
     @Path("/{id}")
     public Response getParticipant(@PathParam("id") String id) {
@@ -133,6 +135,7 @@ public class ParticipantRegistryApiController {
         return Response.ok(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.success(toDto(participant))).build();
     }
     
+    @Override
     @GET
     @Path("/")
     public Response listParticipants() {
@@ -155,6 +158,7 @@ public class ParticipantRegistryApiController {
         }
     }
     
+    @Override
     @PUT
     @Path("/{id}")
     public Response updateParticipant(@PathParam("id") String id, ParticipantDto dto) {
@@ -218,6 +222,7 @@ public class ParticipantRegistryApiController {
         }
     }
     
+    @Override
     @DELETE
     @Path("/{id}")
     public Response deleteParticipant(@PathParam("id") String id) {
