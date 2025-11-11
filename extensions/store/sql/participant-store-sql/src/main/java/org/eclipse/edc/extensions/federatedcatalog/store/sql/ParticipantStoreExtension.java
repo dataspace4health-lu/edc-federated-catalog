@@ -14,6 +14,7 @@
 
 package org.eclipse.edc.extensions.federatedcatalog.store.sql;
 
+import org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ParticipantRegistryApiController;
 import org.eclipse.edc.extensions.federatedcatalog.store.sql.schema.ParticipantStatements;
 import org.eclipse.edc.extensions.federatedcatalog.store.sql.schema.postgres.PostgresDialectStatements;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
@@ -25,6 +26,7 @@ import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
+import org.eclipse.edc.web.spi.WebService;
 
 import javax.sql.DataSource;
 import java.io.BufferedReader;
@@ -55,6 +57,11 @@ public class ParticipantStoreExtension implements ServiceExtension {
     @Inject(required = false)
     private ParticipantStatements statements;
     
+    @Inject
+    private WebService webService;
+    
+    private ParticipantStore participantStore;
+    
     @Override
     public String name() {
         return "SQL Participant Store";
@@ -74,15 +81,26 @@ public class ParticipantStoreExtension implements ServiceExtension {
             monitor.severe("SQL Participant Store: Failed to initialize schema during startup", e);
             throw new EdcException("Failed to initialize participant store schema", e);
         }
+        
+        // Create and register the API controller
+        participantStore = createSqlParticipantStore(context);
+        var apiController = new ParticipantRegistryApiController(participantStore, monitor);
+        webService.registerResource("catalog", apiController);
+        
+        monitor.info("SQL Participant Store: Participant Registry API registered successfully on 'catalog' context");
     }
     
     @Provider
     public ParticipantStore createSqlParticipantStore(ServiceExtensionContext context) {
+        if (participantStore != null) {
+            return participantStore;
+        }
+        
         var monitor = context.getMonitor();
         
         monitor.info("SQL Participant Store: Creating store instance...");
         
-        var store = new SqlParticipantStore(
+        participantStore = new SqlParticipantStore(
                 dataSourceRegistry, 
                 dataSourceName, 
                 transactionContext,
@@ -92,7 +110,7 @@ public class ParticipantStoreExtension implements ServiceExtension {
         
         monitor.info("SQL Participant Store: Store created successfully");
         
-        return store;
+        return participantStore;
     }
     
     private void initializeSchema(ServiceExtensionContext context) {
