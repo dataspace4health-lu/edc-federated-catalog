@@ -69,7 +69,7 @@ class ParticipantRegistryApiControllerTest {
     // ==================== CREATE TESTS ====================
 
     @Test
-    void createParticipant_validRequest_returnsCreated() {
+    void createParticipantValidRequestReturnsCreated() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -91,7 +91,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void createParticipant_duplicateId_returnsConflict() {
+    void createParticipantDuplicateIdReturnsConflict() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -117,7 +117,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void createParticipant_missingId_returnsBadRequest() {
+    void createParticipantMissingIdReturnsBadRequest() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .name(TEST_PARTICIPANT)
@@ -136,7 +136,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void createParticipant_missingName_returnsBadRequest() {
+    void createParticipantMissingNameReturnsBadRequest() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -152,7 +152,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void createParticipant_invalidDspUrl_returnsBadRequest() {
+    void createParticipantInvalidDspUrlReturnsBadRequest() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -169,7 +169,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void createParticipant_missingProtocols_returnsBadRequest() {
+    void createParticipantMissingProtocolsReturnsBadRequest() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -185,7 +185,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void createParticipant_storeFails_returnsInternalServerError() {
+    void createParticipantStoreFailsReturnsInternalServerError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -208,7 +208,7 @@ class ParticipantRegistryApiControllerTest {
     // ==================== GET BY ID TESTS ====================
 
     @Test
-    void getParticipant_existingId_returnsOk() {
+    void getParticipantExistingIdReturnsOk() {
         // Arrange
         Participant participant = Participant.builder()
                 .id(PARTICIPANT_ID_1)
@@ -228,7 +228,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void getParticipant_nonExistingId_returnsNotFound() {
+    void getParticipantNonExistingIdReturnsNotFound() {
         // Arrange
         when(store.findById(PARTICIPANT_ID_999)).thenReturn(null);
 
@@ -241,7 +241,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void getParticipant_nullId_returnsBadRequest() {
+    void getParticipantNullIdReturnsBadRequest() {
         // Act
         Response response = controller.getParticipant(null);
 
@@ -251,7 +251,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void getParticipant_emptyId_returnsBadRequest() {
+    void getParticipantEmptyIdReturnsBadRequest() {
         // Act
         Response response = controller.getParticipant("");
 
@@ -263,7 +263,7 @@ class ParticipantRegistryApiControllerTest {
     // ==================== LIST ALL TESTS ====================
 
     @Test
-    void listParticipants_returnsAllParticipants() {
+    void listParticipantsReturnsAllParticipants() {
         // Arrange
         List<Participant> participants = Arrays.asList(
                 Participant.builder()
@@ -291,7 +291,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void listParticipants_emptyDatabase_returnsEmptyList() {
+    void listParticipantsEmptyDatabaseReturnsEmptyList() {
         // Arrange
         when(store.findAll()).thenReturn(Stream.empty());
 
@@ -304,7 +304,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void listParticipants_storeThrowsException_returnsInternalServerError() {
+    void listParticipantsStoreThrowsExceptionReturnsInternalServerError() {
         // Arrange
         when(store.findAll()).thenThrow(new RuntimeException("Database error"));
 
@@ -319,7 +319,7 @@ class ParticipantRegistryApiControllerTest {
     // ==================== UPDATE TESTS ====================
 
     @Test
-    void updateParticipant_validRequest_returnsOk() {
+    void updateParticipantValidRequestReturnsOk() {
         // Arrange
         String id = PARTICIPANT_ID_1;
         ParticipantDto dto = ParticipantDto.builder()
@@ -350,7 +350,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void updateParticipant_nonExistingId_returnsNotFound() {
+    void updateParticipantNonExistingIdReturnsNotFound() {
         // Arrange
         String id = PARTICIPANT_ID_999;
         ParticipantDto dto = ParticipantDto.builder()
@@ -372,7 +372,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void updateParticipant_idMismatch_returnsBadRequest() {
+    void updateParticipantIdMismatchReturnsBadRequest() {
         // Arrange
         String pathId = PARTICIPANT_ID_1;
         ParticipantDto dto = ParticipantDto.builder()
@@ -392,7 +392,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void updateParticipant_invalidData_returnsBadRequest() {
+    void updateParticipantInvalidDataReturnsBadRequest() {
         // Arrange
         String id = PARTICIPANT_ID_1;
         ParticipantDto dto = ParticipantDto.builder()
@@ -411,7 +411,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void updateParticipant_storeFails_returnsInternalServerError() {
+    void updateParticipantStoreFailsReturnsInternalServerError() {
         // Arrange
         String id = PARTICIPANT_ID_1;
         ParticipantDto dto = ParticipantDto.builder()
@@ -442,7 +442,7 @@ class ParticipantRegistryApiControllerTest {
     // ==================== DELETE TESTS ====================
 
     @Test
-    void deleteParticipant_existingId_returnsNoContent() {
+    void deleteParticipantExistingIdReturnsNoContent() {
         // Arrange
         String id = PARTICIPANT_ID_1;
         Participant existing = Participant.builder()
@@ -463,7 +463,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void deleteParticipant_nonExistingId_returnsNotFound() {
+    void deleteParticipantNonExistingIdReturnsNotFound() {
         // Arrange
         String id = PARTICIPANT_ID_999;
         when(store.findById(id)).thenReturn(null);
@@ -478,7 +478,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void deleteParticipant_nullId_returnsBadRequest() {
+    void deleteParticipantNullIdReturnsBadRequest() {
         // Act
         Response response = controller.deleteParticipant(null);
 
@@ -489,7 +489,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void deleteParticipant_emptyId_returnsBadRequest() {
+    void deleteParticipantEmptyIdReturnsBadRequest() {
         // Act
         Response response = controller.deleteParticipant("");
 
@@ -500,7 +500,7 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
-    void deleteParticipant_storeFails_returnsInternalServerError() {
+    void deleteParticipantStoreFailsReturnsInternalServerError() {
         // Arrange
         String id = PARTICIPANT_ID_1;
         Participant existing = Participant.builder()

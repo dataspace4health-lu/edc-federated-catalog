@@ -38,7 +38,7 @@ class ParticipantValidatorTest {
 
 
     @Test
-    void validate_validDto_returnsNoErrors() {
+    void validateValidDtoReturnsNoErrors() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -55,7 +55,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_nullId_returnsError() {
+    void validateNullIdReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .name(PARTICIPANT_ID_TEST)
@@ -72,7 +72,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_emptyId_returnsError() {
+    void validateEmptyIdReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id("")
@@ -90,7 +90,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_whitespaceId_returnsError() {
+    void validateWhitespaceIdReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id("   ")
@@ -108,7 +108,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_idTooLong_returnsError() {
+    void validateIdTooLongReturnsError() {
         // Arrange
         String longId = "a".repeat(256);
         ParticipantDto dto = ParticipantDto.builder()
@@ -127,7 +127,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_nullName_returnsError() {
+    void validateNullNameReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -144,7 +144,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_emptyName_returnsError() {
+    void validateEmptyNameReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -162,7 +162,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_nameTooLong_returnsError() {
+    void validateNameTooLongReturnsError() {
         // Arrange
         String longName = "a".repeat(256);
         ParticipantDto dto = ParticipantDto.builder()
@@ -181,7 +181,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_nullDspUrl_returnsError() {
+    void validateNullDspUrlReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -198,7 +198,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_emptyDspUrl_returnsError() {
+    void validateEmptyDspUrlReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -216,7 +216,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_invalidDspUrl_returnsError() {
+    void validateInvalidDspUrlReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -234,7 +234,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_dspUrlTooLong_returnsError() {
+    void validateDspUrlTooLongReturnsError() {
         // Arrange
         String longUrl = "https://example.com/" + "a".repeat(500);
         ParticipantDto dto = ParticipantDto.builder()
@@ -253,7 +253,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_nullProtocols_returnsError() {
+    void validateNullProtocolsReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -270,7 +270,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_emptyProtocols_returnsError() {
+    void validateEmptyProtocolsReturnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id(PARTICIPANT_ID_1)
@@ -288,7 +288,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validate_multipleErrors_returnsAllErrors() {
+    void validateMultipleErrorsReturnsAllErrors() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .dspUrl("not-a-url")
@@ -304,7 +304,7 @@ class ParticipantValidatorTest {
     // ==================== VALIDATE ID TESTS ====================
 
     @Test
-    void validateId_validId_returnsNoErrors() {
+    void validateIdValidIdReturnsNoErrors() {
         // Act
         List<String> errors = ParticipantValidator.validateId(PARTICIPANT_ID_1);
 
@@ -313,7 +313,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validateId_nullId_returnsError() {
+    void validateIdNullIdReturnsError() {
         // Act
         List<String> errors = ParticipantValidator.validateId(null);
 
@@ -323,7 +323,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validateId_emptyId_returnsError() {
+    void validateIdEmptyIdReturnsError() {
         // Act
         List<String> errors = ParticipantValidator.validateId("");
 
@@ -333,7 +333,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validateId_whitespaceId_returnsError() {
+    void validateIdWhitespaceIdReturnsError() {
         // Act
         List<String> errors = ParticipantValidator.validateId("   ");
 
@@ -343,7 +343,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validateId_idTooLong_returnsError() {
+    void validateIdIdTooLongReturnsError() {
         // Arrange
         String longId = "a".repeat(256);
 
@@ -356,7 +356,7 @@ class ParticipantValidatorTest {
     }
 
     @Test
-    void validateId_exactlyMaxLength_returnsNoErrors() {
+    void validateIdExactlyMaxLengthReturnsNoErrors() {
         // Arrange
         String maxLengthId = "a".repeat(255);
 

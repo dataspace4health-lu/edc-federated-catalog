@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ParticipantTest {
 
     @Test
-    void testBuilder_setsAllFields() {
+    void testBuilderSetsAllFields() {
         // Arrange
         String id = "participant-123";
         String name = "Test Participant";
@@ -42,7 +42,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testBuilder_buildsEmptyParticipant() {
+    void testBuilderBuildsEmptyParticipant() {
         // Act
         Participant participant = Participant.builder().build();
 
@@ -86,7 +86,7 @@ class ParticipantTest {
     private static final String PARTICIPANT_ONE = "Participant One";
 
     @Test
-    void testEquals_sameId_returnsTrue() {
+    void testEqualsSameIdReturnsTrue() {
         // Arrange
         Participant participant1 = Participant.builder()
                 .id("participant-789")
@@ -103,7 +103,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testEquals_differentId_returnsFalse() {
+    void testEqualsDifferentIdReturnsFalse() {
         // Arrange
         Participant participant1 = Participant.builder()
                 .id("participant-111")
@@ -120,7 +120,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testEquals_sameInstance_returnsTrue() {
+    void testEqualsSameInstanceReturnsTrue() {
         // Arrange
         Participant participant = Participant.builder()
                 .id("participant-333")
@@ -131,7 +131,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testEquals_withNull_returnsFalse() {
+    void testEqualsWithNullReturnsFalse() {
         // Arrange
         Participant participant = Participant.builder()
                 .id("participant-444")
@@ -142,7 +142,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testEquals_withDifferentClass_returnsFalse() {
+    void testEqualsWithDifferentClassReturnsFalse() {
         // Arrange
         Participant participant = Participant.builder()
                 .id("participant-555")
@@ -155,7 +155,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testHashCode_sameId_returnsSameHashCode() {
+    void testHashCodeSameIdReturnsSameHashCode() {
         // Arrange
         Participant participant1 = Participant.builder()
                 .id("participant-666")
@@ -172,7 +172,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testHashCode_differentId_returnsDifferentHashCode() {
+    void testHashCodeDifferentIdReturnsDifferentHashCode() {
         // Arrange
         Participant participant1 = Participant.builder()
                 .id("participant-777")
@@ -187,7 +187,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testHashCode_nullId_handlesGracefully() {
+    void testHashCodeNullIdHandlesGracefully() {
         // Arrange
         Participant participant1 = Participant.builder().build();
         Participant participant2 = Participant.builder().build();
@@ -197,7 +197,7 @@ class ParticipantTest {
     }
 
     @Test
-    void testBuilder_canChainMethods() {
+    void testBuilderCanChainMethods() {
         // Arrange & Act
         Participant participant = Participant.builder()
                 .id("participant-999")
