@@ -43,6 +43,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ParticipantRegistryApiControllerTest {
 
+
+    private static final String PARTICIPANT_ID_1 = "participant-1";
+    private static final String TEST_PARTICIPANT = "Test Participant";
+    private static final String DSP_URL = "https://example.com/api";
+    private static final String SUPPORTED_PROTOCOL = "dataspace-protocol-http";
+    private static final String DATABASE_CONNECTION_FAILED = "Database connection failed";
+    private static final String PARTICIPANT_ID_999 = "participant-999";
+    private static final String UPDATED_PARTICIPANT = "Updated Participant";
+    
+
     @Mock
     private ParticipantStore store;
 
@@ -62,13 +72,13 @@ class ParticipantRegistryApiControllerTest {
     void createParticipant_validRequest_returnsCreated() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .id(PARTICIPANT_ID_1)
+                .name(TEST_PARTICIPANT)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
-        when(store.findById("participant-1")).thenReturn(null);
+        when(store.findById(PARTICIPANT_ID_1)).thenReturn(null);
         when(store.save(any(Participant.class))).thenReturn(StoreResult.success());
 
         // Act + Assert
@@ -76,7 +86,7 @@ class ParticipantRegistryApiControllerTest {
             assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
         }
 
-        verify(store).findById("participant-1");
+        verify(store).findById(PARTICIPANT_ID_1);
         verify(store).save(any(Participant.class));
     }
 
@@ -84,25 +94,25 @@ class ParticipantRegistryApiControllerTest {
     void createParticipant_duplicateId_returnsConflict() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .id(PARTICIPANT_ID_1)
+                .name(TEST_PARTICIPANT)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
         Participant existing = Participant.builder()
-                .id("participant-1")
+                .id(PARTICIPANT_ID_1)
                 .name("Existing Participant")
                 .build();
 
-        when(store.findById("participant-1")).thenReturn(existing);
+        when(store.findById(PARTICIPANT_ID_1)).thenReturn(existing);
 
         // Act + Assert
         try (Response response = controller.createParticipant(dto)) {
             assertThat(response.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
         }
 
-        verify(store).findById("participant-1");
+        verify(store).findById(PARTICIPANT_ID_1);
         verify(store, never()).save(any(Participant.class));
     }
 
@@ -110,9 +120,9 @@ class ParticipantRegistryApiControllerTest {
     void createParticipant_missingId_returnsBadRequest() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(TEST_PARTICIPANT)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
         
 
@@ -129,9 +139,9 @@ class ParticipantRegistryApiControllerTest {
     void createParticipant_missingName_returnsBadRequest() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .id(PARTICIPANT_ID_1)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
         // Act + Assert
@@ -145,10 +155,10 @@ class ParticipantRegistryApiControllerTest {
     void createParticipant_invalidDspUrl_returnsBadRequest() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
+                .id(PARTICIPANT_ID_1)
+                .name(TEST_PARTICIPANT)
                 .dspUrl("not-a-valid-url")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
         // Act + Assert
@@ -162,9 +172,9 @@ class ParticipantRegistryApiControllerTest {
     void createParticipant_missingProtocols_returnsBadRequest() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
+                .id(PARTICIPANT_ID_1)
+                .name(TEST_PARTICIPANT)
+                .dspUrl(DSP_URL)
                 .build();
 
         // Act + Assert
@@ -178,15 +188,15 @@ class ParticipantRegistryApiControllerTest {
     void createParticipant_storeFails_returnsInternalServerError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .id(PARTICIPANT_ID_1)
+                .name(TEST_PARTICIPANT)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
-        when(store.findById("participant-1")).thenReturn(null);
+        when(store.findById(PARTICIPANT_ID_1)).thenReturn(null);
         when(store.save(any(Participant.class)))
-                .thenReturn(StoreResult.generalError("Database connection failed"));
+                .thenReturn(StoreResult.generalError(DATABASE_CONNECTION_FAILED));
 
         // Act + Assert
         try (Response response = controller.createParticipant(dto)) {
@@ -201,33 +211,33 @@ class ParticipantRegistryApiControllerTest {
     void getParticipant_existingId_returnsOk() {
         // Arrange
         Participant participant = Participant.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .endpoint("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .id(PARTICIPANT_ID_1)
+                .name(TEST_PARTICIPANT)
+                .endpoint(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
-        when(store.findById("participant-1")).thenReturn(participant);
+        when(store.findById(PARTICIPANT_ID_1)).thenReturn(participant);
 
         // Act
-        Response response = controller.getParticipant("participant-1");
+        Response response = controller.getParticipant(PARTICIPANT_ID_1);
 
         // Assert
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
-        verify(store).findById("participant-1");
+        verify(store).findById(PARTICIPANT_ID_1);
     }
 
     @Test
     void getParticipant_nonExistingId_returnsNotFound() {
         // Arrange
-        when(store.findById("participant-999")).thenReturn(null);
+        when(store.findById(PARTICIPANT_ID_999)).thenReturn(null);
 
         // Act
-        Response response = controller.getParticipant("participant-999");
+        Response response = controller.getParticipant(PARTICIPANT_ID_999);
 
         // Assert
         assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
-        verify(store).findById("participant-999");
+        verify(store).findById(PARTICIPANT_ID_999);
     }
 
     @Test
@@ -257,7 +267,7 @@ class ParticipantRegistryApiControllerTest {
         // Arrange
         List<Participant> participants = Arrays.asList(
                 Participant.builder()
-                        .id("participant-1")
+                        .id(PARTICIPANT_ID_1)
                         .name("Participant One")
                         .endpoint("https://one.com/api")
                         .supportedProtocols(Arrays.asList("dsp"))
@@ -311,12 +321,12 @@ class ParticipantRegistryApiControllerTest {
     @Test
     void updateParticipant_validRequest_returnsOk() {
         // Arrange
-        String id = "participant-1";
+        String id = PARTICIPANT_ID_1;
         ParticipantDto dto = ParticipantDto.builder()
                 .id(id)
-                .name("Updated Participant")
-                .dspUrl("https://updated.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(UPDATED_PARTICIPANT)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
         Participant existing = Participant.builder()
@@ -342,12 +352,12 @@ class ParticipantRegistryApiControllerTest {
     @Test
     void updateParticipant_nonExistingId_returnsNotFound() {
         // Arrange
-        String id = "participant-999";
+        String id = PARTICIPANT_ID_999;
         ParticipantDto dto = ParticipantDto.builder()
                 .id(id)
-                .name("Updated Participant")
-                .dspUrl("https://updated.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(UPDATED_PARTICIPANT)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
         when(store.findById(id)).thenReturn(null);
@@ -364,12 +374,12 @@ class ParticipantRegistryApiControllerTest {
     @Test
     void updateParticipant_idMismatch_returnsBadRequest() {
         // Arrange
-        String pathId = "participant-1";
+        String pathId = PARTICIPANT_ID_1;
         ParticipantDto dto = ParticipantDto.builder()
                 .id("participant-2")
-                .name("Updated Participant")
-                .dspUrl("https://updated.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(UPDATED_PARTICIPANT)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
         // Act
@@ -384,12 +394,12 @@ class ParticipantRegistryApiControllerTest {
     @Test
     void updateParticipant_invalidData_returnsBadRequest() {
         // Arrange
-        String id = "participant-1";
+        String id = PARTICIPANT_ID_1;
         ParticipantDto dto = ParticipantDto.builder()
                 .id(id)
                 .name("") // Invalid: empty name
-                .dspUrl("https://updated.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
         // Act
@@ -403,12 +413,12 @@ class ParticipantRegistryApiControllerTest {
     @Test
     void updateParticipant_storeFails_returnsInternalServerError() {
         // Arrange
-        String id = "participant-1";
+        String id = PARTICIPANT_ID_1;
         ParticipantDto dto = ParticipantDto.builder()
                 .id(id)
-                .name("Updated Participant")
-                .dspUrl("https://updated.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(UPDATED_PARTICIPANT)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
                 .build();
 
         Participant existing = Participant.builder()
@@ -419,7 +429,7 @@ class ParticipantRegistryApiControllerTest {
 
         when(store.findById(id)).thenReturn(existing);
         when(store.update(any(Participant.class)))
-                .thenReturn(StoreResult.generalError("Database connection failed"));
+                .thenReturn(StoreResult.generalError(DATABASE_CONNECTION_FAILED));
 
         // Act
         Response response = controller.updateParticipant(id, dto);
@@ -434,10 +444,10 @@ class ParticipantRegistryApiControllerTest {
     @Test
     void deleteParticipant_existingId_returnsNoContent() {
         // Arrange
-        String id = "participant-1";
+        String id = PARTICIPANT_ID_1;
         Participant existing = Participant.builder()
                 .id(id)
-                .name("Test Participant")
+                .name(TEST_PARTICIPANT)
                 .build();
 
         when(store.findById(id)).thenReturn(existing);
@@ -455,7 +465,7 @@ class ParticipantRegistryApiControllerTest {
     @Test
     void deleteParticipant_nonExistingId_returnsNotFound() {
         // Arrange
-        String id = "participant-999";
+        String id = PARTICIPANT_ID_999;
         when(store.findById(id)).thenReturn(null);
 
         // Act
@@ -492,14 +502,14 @@ class ParticipantRegistryApiControllerTest {
     @Test
     void deleteParticipant_storeFails_returnsInternalServerError() {
         // Arrange
-        String id = "participant-1";
+        String id = PARTICIPANT_ID_1;
         Participant existing = Participant.builder()
                 .id(id)
-                .name("Test Participant")
+                .name(TEST_PARTICIPANT)
                 .build();
 
         when(store.findById(id)).thenReturn(existing);
-        when(store.delete(id)).thenReturn(StoreResult.generalError("Database connection failed"));
+        when(store.delete(id)).thenReturn(StoreResult.generalError(DATABASE_CONNECTION_FAILED));
 
         // Act
         Response response = controller.deleteParticipant(id);

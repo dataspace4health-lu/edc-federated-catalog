@@ -83,12 +83,14 @@ class ParticipantTest {
         assertThat(participant.getUpdatedAt()).isEqualTo(updatedAt);
     }
 
+    private static final String PARTICIPANT_ONE = "Participant One";
+
     @Test
     void testEquals_sameId_returnsTrue() {
         // Arrange
         Participant participant1 = Participant.builder()
                 .id("participant-789")
-                .name("Participant One")
+                .name(PARTICIPANT_ONE)
                 .build();
 
         Participant participant2 = Participant.builder()
@@ -105,12 +107,12 @@ class ParticipantTest {
         // Arrange
         Participant participant1 = Participant.builder()
                 .id("participant-111")
-                .name("Participant One")
+                .name(PARTICIPANT_ONE)
                 .build();
 
         Participant participant2 = Participant.builder()
                 .id("participant-222")
-                .name("Participant One")
+                .name(PARTICIPANT_ONE)
                 .build();
 
         // Act & Assert
@@ -157,7 +159,7 @@ class ParticipantTest {
         // Arrange
         Participant participant1 = Participant.builder()
                 .id("participant-666")
-                .name("Participant One")
+                .name(PARTICIPANT_ONE)
                 .build();
 
         Participant participant2 = Participant.builder()

@@ -29,14 +29,22 @@ class ParticipantValidatorTest {
 
     // ==================== VALIDATE DTO TESTS ====================
 
+    private static final String PARTICIPANT_ID_1 = "participant-1";
+    private static final String PARTICIPANT_ID_TEST = "Test Participant";
+    private static final String DSP_URL = "https://example.com/api";
+    private static final String SUPPORTED_PROTOCOLS_URL = "dataspace-protocol-http";
+    private static final String ID_REQUIRED = "ID is required";
+    private static final String MAX_CHARACTERS_EXCEEDED = "must not exceed 255 characters";
+
+
     @Test
     void validate_validDto_returnsNoErrors() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -50,9 +58,9 @@ class ParticipantValidatorTest {
     void validate_nullId_returnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -60,7 +68,7 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("ID is required");
+        assertThat(errors.get(0)).contains(ID_REQUIRED);
     }
 
     @Test
@@ -68,9 +76,9 @@ class ParticipantValidatorTest {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id("")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -78,7 +86,7 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("ID is required");
+        assertThat(errors.get(0)).contains(ID_REQUIRED);
     }
 
     @Test
@@ -86,9 +94,9 @@ class ParticipantValidatorTest {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
                 .id("   ")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -96,7 +104,7 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("ID is required");
+        assertThat(errors.get(0)).contains(ID_REQUIRED);
     }
 
     @Test
@@ -105,9 +113,9 @@ class ParticipantValidatorTest {
         String longId = "a".repeat(256);
         ParticipantDto dto = ParticipantDto.builder()
                 .id(longId)
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -115,16 +123,16 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("must not exceed 255 characters");
+        assertThat(errors.get(0)).contains(MAX_CHARACTERS_EXCEEDED);
     }
 
     @Test
     void validate_nullName_returnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .id(PARTICIPANT_ID_1)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -139,10 +147,10 @@ class ParticipantValidatorTest {
     void validate_emptyName_returnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
+                .id(PARTICIPANT_ID_1)
                 .name("")
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -158,10 +166,10 @@ class ParticipantValidatorTest {
         // Arrange
         String longName = "a".repeat(256);
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
+                .id(PARTICIPANT_ID_1)
                 .name(longName)
-                .dspUrl("https://example.com/api")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .dspUrl(DSP_URL)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -169,16 +177,16 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("must not exceed 255 characters");
+        assertThat(errors.get(0)).contains(MAX_CHARACTERS_EXCEEDED);
     }
 
     @Test
     void validate_nullDspUrl_returnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -193,10 +201,10 @@ class ParticipantValidatorTest {
     void validate_emptyDspUrl_returnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
                 .dspUrl("")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -211,10 +219,10 @@ class ParticipantValidatorTest {
     void validate_invalidDspUrl_returnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
                 .dspUrl("not-a-valid-url")
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -230,10 +238,10 @@ class ParticipantValidatorTest {
         // Arrange
         String longUrl = "https://example.com/" + "a".repeat(500);
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
                 .dspUrl(longUrl)
-                .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOLS_URL))
                 .build();
 
         // Act
@@ -248,9 +256,9 @@ class ParticipantValidatorTest {
     void validate_nullProtocols_returnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
                 .build();
 
         // Act
@@ -265,9 +273,9 @@ class ParticipantValidatorTest {
     void validate_emptyProtocols_returnsError() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
-                .id("participant-1")
-                .name("Test Participant")
-                .dspUrl("https://example.com/api")
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
                 .supportedProtocols(Collections.emptyList())
                 .build();
 
@@ -298,7 +306,7 @@ class ParticipantValidatorTest {
     @Test
     void validateId_validId_returnsNoErrors() {
         // Act
-        List<String> errors = ParticipantValidator.validateId("participant-1");
+        List<String> errors = ParticipantValidator.validateId(PARTICIPANT_ID_1);
 
         // Assert
         assertThat(errors).isEmpty();
@@ -311,7 +319,7 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("ID is required");
+        assertThat(errors.get(0)).contains(ID_REQUIRED);
     }
 
     @Test
@@ -321,7 +329,7 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("ID is required");
+        assertThat(errors.get(0)).contains(ID_REQUIRED);
     }
 
     @Test
@@ -331,7 +339,7 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("ID is required");
+        assertThat(errors.get(0)).contains(ID_REQUIRED);
     }
 
     @Test
@@ -344,7 +352,7 @@ class ParticipantValidatorTest {
 
         // Assert
         assertThat(errors).hasSize(1);
-        assertThat(errors.get(0)).contains("must not exceed 255 characters");
+        assertThat(errors.get(0)).contains(MAX_CHARACTERS_EXCEEDED);
     }
 
     @Test
