@@ -71,11 +71,11 @@ class ParticipantRegistryApiControllerTest {
         when(store.findById("participant-1")).thenReturn(null);
         when(store.save(any(Participant.class))).thenReturn(StoreResult.success());
 
-        // Act
-        Response response = controller.createParticipant(dto);
+        // Act + Assert
+        try (Response response = controller.createParticipant(dto)) {
+            assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+        }
 
-        // Assert
-        assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
         verify(store).findById("participant-1");
         verify(store).save(any(Participant.class));
     }
@@ -97,11 +97,11 @@ class ParticipantRegistryApiControllerTest {
 
         when(store.findById("participant-1")).thenReturn(existing);
 
-        // Act
-        Response response = controller.createParticipant(dto);
+        // Act + Assert
+        try (Response response = controller.createParticipant(dto)) {
+            assertThat(response.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
+        }
 
-        // Assert
-        assertThat(response.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
         verify(store).findById("participant-1");
         verify(store, never()).save(any(Participant.class));
     }
@@ -114,12 +114,13 @@ class ParticipantRegistryApiControllerTest {
                 .dspUrl("https://example.com/api")
                 .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
                 .build();
+        
 
-        // Act
-        Response response = controller.createParticipant(dto);
 
-        // Assert
-        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        // Act + Assert
+        try (Response response = controller.createParticipant(dto)) {
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        }
         verify(store, never()).findById(anyString());
         verify(store, never()).save(any(Participant.class));
     }
@@ -133,11 +134,10 @@ class ParticipantRegistryApiControllerTest {
                 .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
                 .build();
 
-        // Act
-        Response response = controller.createParticipant(dto);
-
-        // Assert
-        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        // Act + Assert
+        try (Response response = controller.createParticipant(dto)) {
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        }
         verify(store, never()).save(any(Participant.class));
     }
 
@@ -151,11 +151,10 @@ class ParticipantRegistryApiControllerTest {
                 .supportedProtocols(Arrays.asList("dataspace-protocol-http"))
                 .build();
 
-        // Act
-        Response response = controller.createParticipant(dto);
-
-        // Assert
-        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        // Act + Assert
+        try (Response response = controller.createParticipant(dto)) {
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        }
         verify(store, never()).save(any(Participant.class));
     }
 
@@ -168,11 +167,10 @@ class ParticipantRegistryApiControllerTest {
                 .dspUrl("https://example.com/api")
                 .build();
 
-        // Act
-        Response response = controller.createParticipant(dto);
-
-        // Assert
-        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        // Act + Assert
+        try (Response response = controller.createParticipant(dto)) {
+            assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        }
         verify(store, never()).save(any(Participant.class));
     }
 
@@ -190,11 +188,10 @@ class ParticipantRegistryApiControllerTest {
         when(store.save(any(Participant.class)))
                 .thenReturn(StoreResult.generalError("Database connection failed"));
 
-        // Act
-        Response response = controller.createParticipant(dto);
-
-        // Assert
-        assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+        // Act + Assert
+        try (Response response = controller.createParticipant(dto)) {
+            assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+        }
         verify(store).save(any(Participant.class));
     }
 
