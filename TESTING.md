@@ -1,62 +1,96 @@
 # Unit Tests Documentation
 
+## Test Files Structure
+
+```
+extensions/store/sql/participant-store-sql/src/test/java/
+└── org/eclipse/edc/extensions/federatedcatalog/store/sql/
+    ├── ParticipantTest.java                         (13 tests - Entity)
+    └── api/
+        ├── ParticipantValidatorTest.java            (21 tests - Validation)
+        └── ParticipantRegistryApiControllerTest.java (27 tests - CRUD API)
+```
+
+**Total: 61 unit tests**
+
 ## Current Test Coverage
 
 ### ✅ Participant Entity Tests (13 tests)
 Location: `extensions/store/sql/participant-store-sql/src/test/java/org/eclipse/edc/extensions/federatedcatalog/store/sql/ParticipantTest.java`
 
-#### Test Categories:
+Tests the Participant data model class including builder pattern, getters/setters, equals/hashCode contracts, and edge cases.
 
-**1. Builder Pattern Tests (3 tests)**
-- `testBuilder_setsAllFields()` - Verifies all fields are correctly set via builder
-- `testBuilder_buildsEmptyParticipant()` - Ensures builder works with no fields
-- `testBuilder_canChainMethods()` - Validates fluent method chaining
+### ✅ Participant Validator Tests (21 tests)
+Location: `extensions/store/sql/participant-store-sql/src/test/java/org/eclipse/edc/extensions/federatedcatalog/store/sql/api/ParticipantValidatorTest.java`
 
-**2. Getters and Setters (1 test)**
-- `testSettersAndGetters()` - Confirms all properties can be set and retrieved
+Tests input validation for:
+- ID validation (null, empty, whitespace, length limits)
+- Name validation (null, empty, length limits)
+- DSP URL validation (null, empty, invalid format, length limits)
+- Supported protocols validation (null, empty)
+- Multiple validation errors handling
 
-**3. Equals Contract Tests (4 tests)**
-- `testEquals_sameId_returnsTrue()` - Same ID means objects are equal
-- `testEquals_differentId_returnsFalse()` - Different IDs means objects are not equal
-- `testEquals_sameInstance_returnsTrue()` - Object equals itself (reflexive)
-- `testEquals_withNull_returnsFalse()` - Object is not equal to null
-- `testEquals_withDifferentClass_returnsFalse()` - Object is not equal to different type
+### ✅ CRUD API Controller Tests (27 tests)
+Location: `extensions/store/sql/participant-store-sql/src/test/java/org/eclipse/edc/extensions/federatedcatalog/store/sql/api/ParticipantRegistryApiControllerTest.java`
 
-**4. HashCode Contract Tests (3 tests)**
-- `testHashCode_sameId_returnsSameHashCode()` - Equal objects have same hash code
-- `testHashCode_differentId_returnsDifferentHashCode()` - Different objects have different hash codes
-- `testHashCode_nullId_handlesGracefully()` - Null IDs don't cause exceptions
+Tests all REST API endpoints using Mockito to mock dependencies:
 
-**5. Chaining Test (1 test)**
-- `testBuilder_canChainMethods()` - Builder methods can be chained fluently
+**CREATE Tests (7 tests):**
+- Valid participant creation returns 201 Created
+- Duplicate ID returns 409 Conflict
+- Missing ID returns 400 Bad Request
+- Missing name returns 400 Bad Request
+- Invalid DSP URL returns 400 Bad Request
+- Missing protocols returns 400 Bad Request
+- Store failure returns 500 Internal Server Error
 
-### ❌ Not Yet Implemented - CRUD API Controller Tests
+**READ ONE Tests (4 tests):**
+- Existing participant returns 200 OK
+- Non-existing participant returns 404 Not Found
+- Null ID returns 400 Bad Request
+- Empty ID returns 400 Bad Request
 
-The following tests should be created for complete coverage:
+**READ ALL Tests (3 tests):**
+- Returns all participants with 200 OK
+- Empty database returns empty list with 200 OK
+- Store exception returns 500 Internal Server Error
 
-**ParticipantRegistryApiController Tests** (Location: Same directory, new file `ParticipantRegistryApiControllerTest.java`)
+**UPDATE Tests (5 tests):**
+- Valid update returns 200 OK
+- Non-existing participant returns 404 Not Found
+- Path ID mismatch with body ID returns 400 Bad Request
+- Invalid data returns 400 Bad Request
+- Store failure returns 500 Internal Server Error
 
-1. **Create Tests (POST /participants)**
-   - `testCreate_validParticipant_returnsCreated()`
-   - `testCreate_duplicateId_returnsConflict()`
-   - `testCreate_invalidData_returnsBadRequest()`
+**DELETE Tests (5 tests):**
+- Existing participant deletion returns 204 No Content
+- Non-existing participant returns 404 Not Found
+- Null ID returns 400 Bad Request
+- Empty ID returns 400 Bad Request
+- Store failure returns 500 Internal Server Error
 
-2. **Read All Tests (GET /participants)**
-   - `testGetAll_returnsAllParticipants()`
-   - `testGetAll_emptyDatabase_returnsEmptyList()`
+## Total Test Coverage
 
-3. **Read One Tests (GET /participants/{id})**
-   - `testGetById_existingParticipant_returnsParticipant()`
-   - `testGetById_nonExistingParticipant_returnsNotFound()`
+**61 unit tests** covering:
+- ✅ Entity/Model layer (Participant class)
+- ✅ Validation layer (ParticipantValidator class)
+- ✅ Controller/API layer (ParticipantRegistryApiController class)
 
-4. **Update Tests (PUT /participants/{id})**
-   - `testUpdate_existingParticipant_returnsUpdated()`
-   - `testUpdate_nonExistingParticipant_returnsNotFound()`
-   - `testUpdate_invalidData_returnsBadRequest()`
+### ❌ Not Yet Implemented - Integration Tests
 
-5. **Delete Tests (DELETE /participants/{id})**
-   - `testDelete_existingParticipant_returnsNoContent()`
-   - `testDelete_nonExistingParticipant_returnsNotFound()`
+The following integration tests could be added for complete coverage:
+
+**ParticipantStore Integration Tests** (with real database):
+- Test actual SQL queries with a test database (e.g., H2 in-memory or Testcontainers PostgreSQL)
+- Test transaction rollback scenarios
+- Test concurrent access scenarios
+- Test database connection failures
+
+**End-to-End API Tests:**
+- Test full HTTP request/response cycle with embedded server
+- Test authentication/authorization (if applicable)
+- Test content negotiation
+- Test error responses in real HTTP context
 
 ## Running Tests
 
@@ -78,14 +112,6 @@ cd /home/developer/repo/edc-federated-catalog
 ./gradlew :extensions:store:sql:participant-store-sql:test
 ```
 
-### Option 3: Via Test Script
-For quick testing without full build:
-
-```bash
-cd /home/developer/repo/edc-federated-catalog
-./run-tests.sh
-```
-
 ## Test Reports
 
 After running tests, view the HTML report at:
@@ -95,9 +121,31 @@ extensions/store/sql/participant-store-sql/build/reports/tests/test/index.html
 
 ## Test Frameworks Used
 
-- **JUnit 5 (Jupiter)** - Test framework
-- **AssertJ** - Fluent assertion library
-- **Gradle** - Build and test execution
+- **JUnit 5 (Jupiter)** - Test framework with `@Test`, `@BeforeEach`, `@ExtendWith`
+- **Mockito** - Mocking framework for isolating dependencies (mocks ParticipantStore, Monitor)
+- **AssertJ** - Fluent assertion library for readable test assertions
+- **Jersey** - JAX-RS implementation required for Response object creation in tests
+- **Gradle** - Build and test execution with JUnit Platform support
+
+## Key Configuration
+
+The subproject `build.gradle.kts` requires:
+```kotlin
+tasks.withType<Test> {
+    useJUnitPlatform()  // CRITICAL: Without this, JUnit 5 tests won't run!
+}
+```
+
+And test dependencies:
+```kotlin
+testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
+testImplementation("org.assertj:assertj-core:3.24.2")
+testImplementation("org.mockito:mockito-core:5.8.0")
+testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
+testImplementation("org.glassfish.jersey.core:jersey-common:3.1.3")
+testImplementation("org.glassfish.jersey.inject:jersey-hk2:3.1.3")
+testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
+```
 
 ## Next Steps
 
