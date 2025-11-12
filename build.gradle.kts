@@ -58,9 +58,9 @@ sourceSets {
             // First, clear default srcDirs by removing them one by one
             setSrcDirs(emptySet<File>())
 
-            // Find all directories named 'src' under 'extensions/**/src'
+            // Find all directories named 'src/main/java' under 'extensions'
             val srcFolders = file("extensions").walkTopDown()
-                .filter { it.isDirectory && it.name == "src" }
+                .filter { it.isDirectory && it.path.endsWith("src${File.separator}main${File.separator}java") }
                 .toSet()
 
             // Add those directories as source dirs
