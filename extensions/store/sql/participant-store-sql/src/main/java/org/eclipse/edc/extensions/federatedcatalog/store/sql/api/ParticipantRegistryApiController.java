@@ -54,25 +54,9 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         monitor.debug("Received request to create participant: " + dto.getId());
         
         // Validate input
-        List<String> validationErrors = ParticipantValidator.validate(dto);
-        if (!validationErrors.isEmpty()) {
-            monitor.warning("Validation failed for participant creation: " + String.join(", ", validationErrors));
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
-                            "VALIDATION_ERROR",
-                            String.join("; ", validationErrors)))
-                    .build();
-        }
-        
-        // Check if participant already exists
-        var existing = store.findById(dto.getId());
-        if (existing != null) {
-            monitor.warning("Participant already exists: " + dto.getId());
-            return Response.status(Response.Status.CONFLICT)
-                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
-                            "PARTICIPANT_EXISTS",
-                            "Participant with ID '" + dto.getId() + "' already exists"))
-                    .build();
+        var validationResponse = validateParticipantForCreation(dto);
+        if (validationResponse != null) {
+            return validationResponse;
         }
         
         // Convert DTO to entity
@@ -112,23 +96,15 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         monitor.debug("Received request to get participant: " + id);
         
         // Validate ID
-        List<String> validationErrors = ParticipantValidator.validateId(id);
-        if (!validationErrors.isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
-                            "INVALID_ID",
-                            String.join("; ", validationErrors)))
-                    .build();
+        var validationResponse = validateId(id);
+        if (validationResponse != null) {
+            return validationResponse;
         }
         
         var participant = store.findById(id);
         if (participant == null) {
             monitor.debug("Participant not found: " + id);
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
-                            "NOT_FOUND",
-                            "Participant with ID '" + id + "' not found"))
-                    .build();
+            return buildNotFoundResponse(id);
         }
         
         monitor.debug("Successfully retrieved participant: " + id);
@@ -173,26 +149,17 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
                     .build();
         }
         
-        // Validate input
-        List<String> validationErrors = ParticipantValidator.validate(dto);
-        if (!validationErrors.isEmpty()) {
-            monitor.warning("Validation failed for participant update: " + String.join(", ", validationErrors));
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
-                            "VALIDATION_ERROR",
-                            String.join("; ", validationErrors)))
-                    .build();
+        // Validate DTO
+        var validationResponse = validateDto(dto, "update");
+        if (validationResponse != null) {
+            return validationResponse;
         }
         
         // Check if participant exists
         var existing = store.findById(id);
         if (existing == null) {
             monitor.warning("Participant not found for update: " + id);
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
-                            "NOT_FOUND",
-                            "Participant with ID '" + id + "' not found"))
-                    .build();
+            return buildNotFoundResponse(id);
         }
         
         // Update participant - preserve createdAt, update updatedAt
@@ -229,24 +196,16 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         monitor.debug("Received request to delete participant: " + id);
         
         // Validate ID
-        List<String> validationErrors = ParticipantValidator.validateId(id);
-        if (!validationErrors.isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
-                            "INVALID_ID",
-                            String.join("; ", validationErrors)))
-                    .build();
+        var validationResponse = validateId(id);
+        if (validationResponse != null) {
+            return validationResponse;
         }
         
         // Check if participant exists
         var existing = store.findById(id);
         if (existing == null) {
             monitor.warning("Participant not found for deletion: " + id);
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
-                            "NOT_FOUND",
-                            "Participant with ID '" + id + "' not found"))
-                    .build();
+            return buildNotFoundResponse(id);
         }
         
         var result = store.delete(id);
@@ -261,6 +220,86 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
                             result.getFailureDetail()))
                     .build();
         }
+    }
+    
+    /**
+     * Validates a participant DTO for creation.
+     * Checks both DTO validation rules and business rules (e.g., uniqueness).
+     * 
+     * @param dto the participant DTO to validate
+     * @return a Response with validation errors if validation fails, null otherwise
+     */
+    private Response validateParticipantForCreation(ParticipantDto dto) {
+        // Validate DTO fields
+        var validationResponse = validateDto(dto, "creation");
+        if (validationResponse != null) {
+            return validationResponse;
+        }
+        
+        // Check if participant already exists
+        var existing = store.findById(dto.getId());
+        if (existing != null) {
+            monitor.warning("Participant already exists: " + dto.getId());
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
+                            "PARTICIPANT_EXISTS",
+                            "Participant with ID '" + dto.getId() + "' already exists"))
+                    .build();
+        }
+        
+        return null; // Validation passed
+    }
+    
+    /**
+     * Validates a participant DTO.
+     * 
+     * @param dto the participant DTO to validate
+     * @param operation the operation context (for logging)
+     * @return a Response with validation errors if validation fails, null otherwise
+     */
+    private Response validateDto(ParticipantDto dto, String operation) {
+        List<String> validationErrors = ParticipantValidator.validate(dto);
+        if (!validationErrors.isEmpty()) {
+            monitor.warning("Validation failed for participant " + operation + ": " + String.join(", ", validationErrors));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
+                            "VALIDATION_ERROR",
+                            String.join("; ", validationErrors)))
+                    .build();
+        }
+        return null;
+    }
+    
+    /**
+     * Validates a participant ID.
+     * 
+     * @param id the participant ID to validate
+     * @return a Response with validation errors if validation fails, null otherwise
+     */
+    private Response validateId(String id) {
+        List<String> validationErrors = ParticipantValidator.validateId(id);
+        if (!validationErrors.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
+                            "INVALID_ID",
+                            String.join("; ", validationErrors)))
+                    .build();
+        }
+        return null;
+    }
+    
+    /**
+     * Builds a standard "not found" response.
+     * 
+     * @param id the participant ID that was not found
+     * @return a 404 Response
+     */
+    private Response buildNotFoundResponse(String id) {
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity(org.eclipse.edc.extensions.federatedcatalog.store.sql.api.ApiResponse.error(
+                        "NOT_FOUND",
+                        "Participant with ID '" + id + "' not found"))
+                .build();
     }
     
     /**

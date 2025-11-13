@@ -18,11 +18,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Validator for Participant API requests.
  */
 public class ParticipantValidator {
+    
+    private static final int MAX_ID_LENGTH = 255;
+    private static final int MAX_NAME_LENGTH = 255;
+    private static final int MAX_URL_LENGTH = 500;
     
     /**
      * Validates a ParticipantDto and returns list of validation errors.
@@ -33,38 +38,10 @@ public class ParticipantValidator {
     public static List<String> validate(ParticipantDto dto) {
         List<String> errors = new ArrayList<>();
         
-        // Validate ID
-        if (dto.getId() == null || dto.getId().trim().isEmpty()) {
-            errors.add("Participant ID is required");
-        } else if (dto.getId().length() > 255) {
-            errors.add("Participant ID must not exceed 255 characters");
-        }
-        
-        // Validate Name
-        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
-            errors.add("Participant name is required");
-        } else if (dto.getName().length() > 255) {
-            errors.add("Participant name must not exceed 255 characters");
-        }
-        
-        // Validate DSP URL
-        if (dto.getDspUrl() == null || dto.getDspUrl().trim().isEmpty()) {
-            errors.add("DSP URL is required");
-        } else {
-            if (dto.getDspUrl().length() > 500) {
-                errors.add("DSP URL must not exceed 500 characters");
-            }
-            try {
-                new URL(dto.getDspUrl());
-            } catch (MalformedURLException e) {
-                errors.add("DSP URL is not a valid URL: " + e.getMessage());
-            }
-        }
-        
-        // Validate supported protocols
-        if (dto.getSupportedProtocols() == null || dto.getSupportedProtocols().isEmpty()) {
-            errors.add("At least one supported protocol is required");
-        }
+        errors.addAll(validateId(dto.getId()));
+        errors.addAll(validateName(dto.getName()));
+        errors.addAll(validateDspUrl(dto.getDspUrl()));
+        errors.addAll(validateSupportedProtocols(dto.getSupportedProtocols()));
         
         return errors;
     }
@@ -76,14 +53,95 @@ public class ParticipantValidator {
      * @return list of validation error messages, empty if valid
      */
     public static List<String> validateId(String id) {
+        return validateStringField(id, "Participant ID", MAX_ID_LENGTH);
+    }
+    
+    /**
+     * Validates a participant name.
+     * 
+     * @param name the participant name to validate
+     * @return list of validation error messages, empty if valid
+     */
+    private static List<String> validateName(String name) {
+        return validateStringField(name, "Participant name", MAX_NAME_LENGTH);
+    }
+    
+    /**
+     * Validates a DSP URL.
+     * 
+     * @param dspUrl the DSP URL to validate
+     * @return list of validation error messages, empty if valid
+     */
+    private static List<String> validateDspUrl(String dspUrl) {
         List<String> errors = new ArrayList<>();
         
-        if (id == null || id.trim().isEmpty()) {
-            errors.add("Participant ID is required");
-        } else if (id.length() > 255) {
-            errors.add("Participant ID must not exceed 255 characters");
+        // Check if URL is null or blank
+        if (!isValidString(dspUrl)) {
+            errors.add("DSP URL is required");
+            return errors;
+        }
+        
+        // Check URL length
+        if (dspUrl.length() > MAX_URL_LENGTH) {
+            errors.add("DSP URL must not exceed " + MAX_URL_LENGTH + " characters");
+        }
+        
+        // Validate URL format
+        try {
+            new URL(dspUrl);
+        } catch (MalformedURLException e) {
+            errors.add("DSP URL is not a valid URL: " + e.getMessage());
         }
         
         return errors;
+    }
+    
+    /**
+     * Validates supported protocols list.
+     * 
+     * @param supportedProtocols the list of supported protocols
+     * @return list of validation error messages, empty if valid
+     */
+    private static List<String> validateSupportedProtocols(List<String> supportedProtocols) {
+        List<String> errors = new ArrayList<>();
+        
+        if (supportedProtocols == null || supportedProtocols.isEmpty()) {
+            errors.add("At least one supported protocol is required");
+        }
+        
+        return errors;
+    }
+    
+    /**
+     * Validates a generic string field with required and max length constraints.
+     * 
+     * @param value the string value to validate
+     * @param fieldName the name of the field (for error messages)
+     * @param maxLength the maximum allowed length
+     * @return list of validation error messages, empty if valid
+     */
+    private static List<String> validateStringField(String value, String fieldName, int maxLength) {
+        List<String> errors = new ArrayList<>();
+        
+        if (!isValidString(value)) {
+            errors.add(fieldName + " is required");
+        } else if (value.length() > maxLength) {
+            errors.add(fieldName + " must not exceed " + maxLength + " characters");
+        }
+        
+        return errors;
+    }
+    
+    /**
+     * Checks if a string is valid (not null and not blank).
+     * 
+     * @param value the string to check
+     * @return true if valid, false otherwise
+     */
+    private static boolean isValidString(String value) {
+        return Optional.ofNullable(value)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .isPresent();
     }
 }
