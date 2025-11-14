@@ -14,16 +14,17 @@
 
 package org.eclipse.edc.extensions.federatedcatalog.store.sql;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.extensions.federatedcatalog.store.sql.schema.ParticipantStatements;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.persistence.EdcPersistenceException;
 import org.eclipse.edc.spi.result.StoreResult;
+import org.eclipse.edc.sql.QueryExecutor;
+import org.eclipse.edc.sql.store.AbstractSqlStore;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -34,27 +35,24 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 
 /**
- * SQL-based implementation of ParticipantStore for EDC 0.13.0.
+ * SQL-based implementation of ParticipantStore following EDC patterns.
  */
-public class SqlParticipantStore implements ParticipantStore {
+public class SqlParticipantStore extends AbstractSqlStore implements ParticipantStore {
     
     private static final String PARTICIPANT_EXISTS = "Participant with ID '%s' already exists";
     private static final String PARTICIPANT_NOT_FOUND = "Participant with ID '%s' not found";
     
-    private final DataSourceRegistry dataSourceRegistry;
-    private final String dataSourceName;
-    private final TransactionContext transactionContext;
     private final ParticipantStatements statements;
     private final Monitor monitor;
     
     public SqlParticipantStore(DataSourceRegistry dataSourceRegistry,
                                String dataSourceName,
                                TransactionContext transactionContext,
+                               ObjectMapper objectMapper,
                                ParticipantStatements statements,
+                               QueryExecutor queryExecutor,
                                Monitor monitor) {
-        this.dataSourceRegistry = dataSourceRegistry;
-        this.dataSourceName = dataSourceName;
-        this.transactionContext = transactionContext;
+        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper, queryExecutor);
         this.statements = statements;
         this.monitor = monitor;
     }
@@ -63,15 +61,8 @@ public class SqlParticipantStore implements ParticipantStore {
     public Participant findById(String id) {
         Objects.requireNonNull(id);
         return transactionContext.execute(() -> {
-            try (var connection = getConnection();
-                 var statement = connection.prepareStatement(statements.getFindByIdTemplate())) {
-                statement.setString(1, id);
-                try (var rs = statement.executeQuery()) {
-                    if (rs.next()) {
-                        return mapResultSet(rs);
-                    }
-                    return null;
-                }
+            try (var connection = getConnection()) {
+                return queryExecutor.single(connection, false, this::mapResultSet, statements.getFindByIdTemplate(), id);
             } catch (SQLException e) {
                 monitor.warning("Failed to find participant by id: " + id, e);
                 throw new EdcPersistenceException(e.getMessage(), e);
@@ -82,15 +73,8 @@ public class SqlParticipantStore implements ParticipantStore {
     @Override
     public Stream<Participant> findAll() {
         return transactionContext.execute(() -> {
-            try (var connection = getConnection();
-                 var statement = connection.createStatement();
-                 var rs = statement.executeQuery(statements.getFindAllTemplate())) {
-                
-                var participants = new java.util.ArrayList<Participant>();
-                while (rs.next()) {
-                    participants.add(mapResultSet(rs));
-                }
-                return participants.stream();
+            try (var connection = getConnection()) {
+                return queryExecutor.query(connection, false, this::mapResultSet, statements.getFindAllTemplate()).toList().stream();
             } catch (SQLException e) {
                 monitor.warning("Failed to find all participants", e);
                 throw new EdcPersistenceException(e);
@@ -102,13 +86,13 @@ public class SqlParticipantStore implements ParticipantStore {
     public StoreResult<Void> save(Participant participant) {
         return transactionContext.execute(() -> {
             try (var connection = getConnection()) {
-                if (existsById(connection, participant.getId())) {
+                var existing = queryExecutor.single(connection, false, this::mapResultSet, statements.getFindByIdTemplate(), participant.getId());
+                if (existing != null) {
                     return StoreResult.alreadyExists(format(PARTICIPANT_EXISTS, participant.getId()));
-                } else {
-                    insertInternal(connection, participant);
-                    monitor.debug("Inserted participant: " + participant.getId());
-                    return StoreResult.success();
                 }
+                insertInternal(connection, participant);
+                monitor.debug("Inserted participant: " + participant.getId());
+                return StoreResult.success();
             } catch (Exception e) {
                 monitor.warning("Failed to save participant: " + participant.getId(), e);
                 throw new EdcPersistenceException(e.getMessage(), e);
@@ -120,7 +104,8 @@ public class SqlParticipantStore implements ParticipantStore {
     public StoreResult<Void> update(Participant participant) {
         return transactionContext.execute(() -> {
             try (var connection = getConnection()) {
-                if (existsById(connection, participant.getId())) {
+                var existing = queryExecutor.single(connection, false, this::mapResultSet, statements.getFindByIdTemplate(), participant.getId());
+                if (existing != null) {
                     updateInternal(connection, participant);
                     monitor.debug("Updated participant: " + participant.getId());
                     return StoreResult.success();
@@ -139,12 +124,9 @@ public class SqlParticipantStore implements ParticipantStore {
         Objects.requireNonNull(id);
         return transactionContext.execute(() -> {
             try (var connection = getConnection()) {
-                var participant = findById(id);
+                var participant = queryExecutor.single(connection, false, this::mapResultSet, statements.getFindByIdTemplate(), id);
                 if (participant != null) {
-                    try (var statement = connection.prepareStatement(statements.getDeleteTemplate())) {
-                        statement.setString(1, id);
-                        statement.executeUpdate();
-                    }
+                    queryExecutor.execute(connection, statements.getDeleteTemplate(), id);
                     monitor.debug("Deleted participant: " + id);
                     return StoreResult.success(participant);
                 } else {
@@ -159,39 +141,23 @@ public class SqlParticipantStore implements ParticipantStore {
     
     private void insertInternal(Connection connection, Participant participant) throws SQLException {
         long now = System.currentTimeMillis();
-        try (var statement = connection.prepareStatement(statements.getInsertTemplate())) {
-            statement.setString(1, participant.getId());
-            statement.setString(2, participant.getName());
-            statement.setString(3, participant.getEndpoint());
-            statement.setString(4, String.join(",", participant.getSupportedProtocols()));
-            statement.setLong(5, now);
-            statement.setLong(6, now);
-            statement.executeUpdate();
-        }
+        queryExecutor.execute(connection, statements.getInsertTemplate(),
+                participant.getId(),
+                participant.getName(),
+                participant.getEndpoint(),
+                String.join(",", participant.getSupportedProtocols()),
+                now,
+                now);
     }
     
     private void updateInternal(Connection connection, Participant participant) throws SQLException {
         Objects.requireNonNull(participant);
-        try (var statement = connection.prepareStatement(statements.getUpdateTemplate())) {
-            statement.setString(1, participant.getName());
-            statement.setString(2, participant.getEndpoint());
-            statement.setString(3, String.join(",", participant.getSupportedProtocols()));
-            statement.setLong(4, System.currentTimeMillis());
-            statement.setString(5, participant.getId());
-            statement.executeUpdate();
-        }
-    }
-    
-    private boolean existsById(Connection connection, String id) throws SQLException {
-        try (var statement = connection.prepareStatement(statements.getCountTemplate())) {
-            statement.setString(1, id);
-            try (var rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong(1) > 0;
-                }
-                return false;
-            }
-        }
+        queryExecutor.execute(connection, statements.getUpdateTemplate(),
+                participant.getName(),
+                participant.getEndpoint(),
+                String.join(",", participant.getSupportedProtocols()),
+                System.currentTimeMillis(),
+                participant.getId());
     }
     
     private Participant mapResultSet(ResultSet rs) throws SQLException {
@@ -208,17 +174,5 @@ public class SqlParticipantStore implements ParticipantStore {
                 .createdAt(rs.getLong(statements.getCreatedAtColumn()))
                 .updatedAt(rs.getLong(statements.getUpdatedAtColumn()))
                 .build();
-    }
-    
-    private Connection getConnection() {
-        DataSource dataSource = dataSourceRegistry.resolve(dataSourceName);
-        if (dataSource == null) {
-            throw new EdcPersistenceException("DataSource not found: " + dataSourceName);
-        }
-        try {
-            return dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new EdcPersistenceException(e);
-        }
     }
 }

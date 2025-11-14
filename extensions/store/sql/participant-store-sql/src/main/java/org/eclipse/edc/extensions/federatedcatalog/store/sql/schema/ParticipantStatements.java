@@ -14,10 +14,12 @@
 
 package org.eclipse.edc.extensions.federatedcatalog.store.sql.schema;
 
+import org.eclipse.edc.sql.statement.SqlStatements;
+
 /**
  * Defines all SQL statements needed for the Participant store.
  */
-public interface ParticipantStatements {
+public interface ParticipantStatements extends SqlStatements {
     
     default String getParticipantTable() {
         return "edc_participant";

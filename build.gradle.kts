@@ -35,6 +35,9 @@ dependencies {
     implementation(libs.edc.sql.core)
     implementation(libs.edc.sql.pool)
     implementation(libs.edc.sql.transactionlocal)
+    implementation(libs.edc.util.lib)
+    implementation(libs.edc.sql.lib)
+    implementation(libs.edc.sql.bootstrapper)
     implementation(libs.postgres)
 
     implementation(project(":extensions:catalog-node-resolver"))

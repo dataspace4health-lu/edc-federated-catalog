@@ -12,6 +12,12 @@ dependencies {
     implementation(libs.edc.transaction.spi)
     implementation(libs.edc.transactions.datasource.spi)
     implementation(libs.edc.web.spi)
+    
+    // EDC SQL infrastructure
+    implementation(libs.edc.util.lib)
+    implementation(libs.edc.sql.lib)
+    implementation(libs.edc.sql.bootstrapper)
+    
     implementation(libs.postgres)
     implementation(libs.jakarta.rsApi)
     
