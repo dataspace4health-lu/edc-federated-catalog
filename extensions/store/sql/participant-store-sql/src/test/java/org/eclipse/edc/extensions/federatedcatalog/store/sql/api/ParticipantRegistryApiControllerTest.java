@@ -411,6 +411,25 @@ class ParticipantRegistryApiControllerTest {
     }
 
     @Test
+    void updateParticipantInvalidDspUrlReturnsBadRequest() {
+        // Arrange
+        String id = PARTICIPANT_ID_1;
+        ParticipantDto dto = ParticipantDto.builder()
+                .id(id)
+                .name(UPDATED_PARTICIPANT)
+                .dspUrl("not-a-valid-url") // Invalid DSP URL
+                .supportedProtocols(Arrays.asList(SUPPORTED_PROTOCOL))
+                .build();
+
+        // Act
+        Response response = controller.updateParticipant(id, dto);
+
+        // Assert
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        verify(store, never()).update(any(Participant.class));
+    }
+
+    @Test
     void updateParticipantStoreFailsReturnsInternalServerError() {
         // Arrange
         String id = PARTICIPANT_ID_1;

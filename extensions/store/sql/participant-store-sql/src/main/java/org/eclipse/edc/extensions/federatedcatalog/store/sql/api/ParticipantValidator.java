@@ -107,6 +107,26 @@ public class ParticipantValidator {
         
         if (supportedProtocols == null || supportedProtocols.isEmpty()) {
             errors.add("At least one supported protocol is required");
+            return errors;
+        }
+        
+        // Check for blank entries
+        boolean hasBlankEntry = supportedProtocols.stream()
+                .anyMatch(protocol -> protocol == null || protocol.trim().isEmpty());
+        if (hasBlankEntry) {
+            errors.add("Protocol entries must not be blank");
+        }
+        
+        // Check for duplicates
+        long distinctCount = supportedProtocols.stream()
+                .filter(protocol -> protocol != null && !protocol.trim().isEmpty())
+                .distinct()
+                .count();
+        long nonBlankCount = supportedProtocols.stream()
+                .filter(protocol -> protocol != null && !protocol.trim().isEmpty())
+                .count();
+        if (distinctCount < nonBlankCount) {
+            errors.add("Duplicate protocols are not allowed");
         }
         
         return errors;

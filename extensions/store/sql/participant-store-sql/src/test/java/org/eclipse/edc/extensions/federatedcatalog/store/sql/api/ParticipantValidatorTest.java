@@ -288,6 +288,78 @@ class ParticipantValidatorTest {
     }
 
     @Test
+    void validateProtocolsWithEmptyStringReturnsError() {
+        // Arrange
+        ParticipantDto dto = ParticipantDto.builder()
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(List.of(""))
+                .build();
+
+        // Act
+        List<String> errors = ParticipantValidator.validate(dto);
+
+        // Assert
+        assertThat(errors).hasSize(1);
+        assertThat(errors.get(0)).contains("Protocol entries must not be blank");
+    }
+
+    @Test
+    void validateProtocolsWithMixedValidAndEmptyReturnsError() {
+        // Arrange
+        ParticipantDto dto = ParticipantDto.builder()
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(List.of(SUPPORTED_PROTOCOLS_URL, ""))
+                .build();
+
+        // Act
+        List<String> errors = ParticipantValidator.validate(dto);
+
+        // Assert
+        assertThat(errors).hasSize(1);
+        assertThat(errors.get(0)).contains("Protocol entries must not be blank");
+    }
+
+    @Test
+    void validateProtocolsWithWhitespaceReturnsError() {
+        // Arrange
+        ParticipantDto dto = ParticipantDto.builder()
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(List.of("   "))
+                .build();
+
+        // Act
+        List<String> errors = ParticipantValidator.validate(dto);
+
+        // Assert
+        assertThat(errors).hasSize(1);
+        assertThat(errors.get(0)).contains("Protocol entries must not be blank");
+    }
+
+    @Test
+    void validateProtocolsWithDuplicatesReturnsError() {
+        // Arrange
+        ParticipantDto dto = ParticipantDto.builder()
+                .id(PARTICIPANT_ID_1)
+                .name(PARTICIPANT_ID_TEST)
+                .dspUrl(DSP_URL)
+                .supportedProtocols(List.of(SUPPORTED_PROTOCOLS_URL, SUPPORTED_PROTOCOLS_URL))
+                .build();
+
+        // Act
+        List<String> errors = ParticipantValidator.validate(dto);
+
+        // Assert
+        assertThat(errors).hasSize(1);
+        assertThat(errors.get(0)).contains("Duplicate protocols are not allowed");
+    }
+
+    @Test
     void validateMultipleErrorsReturnsAllErrors() {
         // Arrange
         ParticipantDto dto = ParticipantDto.builder()
