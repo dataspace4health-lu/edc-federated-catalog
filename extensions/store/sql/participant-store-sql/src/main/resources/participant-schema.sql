@@ -23,5 +23,4 @@ CREATE TABLE IF NOT EXISTS edc_participant
     updated_at           BIGINT       NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_participant_name ON edc_participant(name);
-CREATE INDEX IF NOT EXISTS idx_participant_endpoint ON edc_participant(endpoint);
+CREATE INDEX IF NOT EXISTS idx_participant_id ON edc_participant(participant_id);

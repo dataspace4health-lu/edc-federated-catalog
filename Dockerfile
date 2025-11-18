@@ -30,7 +30,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy only the fat jar and configs from builder
 COPY --from=builder /workspace/build/libs/*.jar /app/federated-catalog.jar
 
+# Default log level environment variable (can be overridden at runtime)
+ENV LOG_LEVEL=info
+
 USER 65534
 
-# Run the jar with config + logging
-CMD ["java", "-jar", "/app/federated-catalog.jar"]
+# Run the jar with logging
+CMD ["sh", "-c", "exec java -jar /app/federated-catalog.jar --log-level=$LOG_LEVEL"]

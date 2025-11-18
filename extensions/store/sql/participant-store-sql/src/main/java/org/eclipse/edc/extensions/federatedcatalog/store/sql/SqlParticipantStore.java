@@ -86,11 +86,11 @@ public class SqlParticipantStore extends AbstractSqlStore implements Participant
     public StoreResult<Void> save(Participant participant) {
         return transactionContext.execute(() -> {
             try (var connection = getConnection()) {
-                var existing = queryExecutor.single(connection, false, this::mapResultSet, statements.getFindByIdTemplate(), participant.getId());
+                var existing = findById(participant.getId());
                 if (existing != null) {
                     return StoreResult.alreadyExists(format(PARTICIPANT_EXISTS, participant.getId()));
                 }
-                insertInternal(connection, participant);
+                insertParticipant(connection, participant);
                 monitor.debug("Inserted participant: " + participant.getId());
                 return StoreResult.success();
             } catch (Exception e) {
@@ -104,9 +104,9 @@ public class SqlParticipantStore extends AbstractSqlStore implements Participant
     public StoreResult<Void> update(Participant participant) {
         return transactionContext.execute(() -> {
             try (var connection = getConnection()) {
-                var existing = queryExecutor.single(connection, false, this::mapResultSet, statements.getFindByIdTemplate(), participant.getId());
+                var existing = findById(participant.getId());
                 if (existing != null) {
-                    updateInternal(connection, participant);
+                    updateParticipant(connection, participant);
                     monitor.debug("Updated participant: " + participant.getId());
                     return StoreResult.success();
                 } else {
@@ -124,7 +124,7 @@ public class SqlParticipantStore extends AbstractSqlStore implements Participant
         Objects.requireNonNull(id);
         return transactionContext.execute(() -> {
             try (var connection = getConnection()) {
-                var participant = queryExecutor.single(connection, false, this::mapResultSet, statements.getFindByIdTemplate(), id);
+                var participant = findById(id);
                 if (participant != null) {
                     queryExecutor.execute(connection, statements.getDeleteTemplate(), id);
                     monitor.debug("Deleted participant: " + id);
@@ -139,7 +139,7 @@ public class SqlParticipantStore extends AbstractSqlStore implements Participant
         });
     }
     
-    private void insertInternal(Connection connection, Participant participant) throws SQLException {
+    private void insertParticipant(Connection connection, Participant participant) throws SQLException {
         long now = System.currentTimeMillis();
         queryExecutor.execute(connection, statements.getInsertTemplate(),
                 participant.getId(),
@@ -150,7 +150,7 @@ public class SqlParticipantStore extends AbstractSqlStore implements Participant
                 now);
     }
     
-    private void updateInternal(Connection connection, Participant participant) throws SQLException {
+    private void updateParticipant(Connection connection, Participant participant) throws SQLException {
         Objects.requireNonNull(participant);
         queryExecutor.execute(connection, statements.getUpdateTemplate(),
                 participant.getName(),
