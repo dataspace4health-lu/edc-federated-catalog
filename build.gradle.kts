@@ -2,6 +2,8 @@ plugins {
     `java-library`
     id("checkstyle")
     id("application")
+    id("test-report-aggregation")
+    id("jacoco")
     alias(libs.plugins.shadow)
 }
 
@@ -49,6 +51,8 @@ dependencies {
     
     runtimeOnly(libs.edc.api.observability)
 
+    testReportAggregation(project(":extensions:catalog-node-resolver"))
+    testReportAggregation(project(":extensions:store:sql:participant-store-sql"))
 }
 
 application {
@@ -87,14 +91,51 @@ tasks.withType<Checkstyle> {
     reports {
         xml.required.set(false)
         html.required.set(true)
-        html.outputLocation.set(file("$buildDir/reports/checkstyle/lint.html"))
+        html.outputLocation.set(layout.buildDirectory.file("reports/checkstyle/lint.html"))
     }
 }
 
-tasks.test {
-    // Change the directory for HTML reports
-    reports.html.outputLocation.set(file("$buildDir/test-results/html/test.html"))
-
-    // Change the directory for JUnit XML test results
-    reports.junitXml.outputLocation.set(file("$buildDir/test-results/xml/test.xml"))
+subprojects {
+    plugins.apply("java")
+    plugins.apply("jacoco")
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+        // optional per-task report locations; not necessary for aggregation
+        reports {
+            junitXml.required.set(true)
+            junitXml.outputLocation.set(layout.buildDirectory.dir("reports/junit/xml"))
+            html.required.set(true)
+            html.outputLocation.set(layout.buildDirectory.dir("reports/junit/html"))
+        }
+        finalizedBy(tasks.jacocoTestReport)
+    }
+    jacoco {
+        toolVersion = "0.8.10"
+    }
+    tasks.jacocoTestReport {
+        dependsOn(tasks.test)
+        reports {
+            xml.required.set(true)
+            xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/xml/jacoco.xml"))
+            html.required.set(true)
+            html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/html"))
+            csv.required.set(false)
+        }
+    }
 }
+
+// 1) Register a single aggregation task
+val allTests by tasks.register<TestReport>("allTests") {
+    destinationDirectory.set(layout.buildDirectory.dir("reports/junit/html"))
+    // Collect results from all subprojects’ "test" tasks
+    testResults.from(subprojects.map { it.tasks.named("test") })
+}
+
+// 2) Ensure aggregation runs even if tests fail
+// finalizedBy makes Gradle run 'allTests' regardless of the outcome of 'test'
+tasks.named("test") {
+    finalizedBy(allTests)
+}
+
+
+

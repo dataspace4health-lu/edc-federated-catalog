@@ -139,7 +139,7 @@ public class SqlParticipantStore extends AbstractSqlStore implements Participant
         });
     }
     
-    private void insertParticipant(Connection connection, Participant participant) throws SQLException {
+    private void insertParticipant(Connection connection, Participant participant) {
         long now = System.currentTimeMillis();
         queryExecutor.execute(connection, statements.getInsertTemplate(),
                 participant.getId(),
@@ -150,7 +150,7 @@ public class SqlParticipantStore extends AbstractSqlStore implements Participant
                 now);
     }
     
-    private void updateParticipant(Connection connection, Participant participant) throws SQLException {
+    private void updateParticipant(Connection connection, Participant participant) {
         Objects.requireNonNull(participant);
         queryExecutor.execute(connection, statements.getUpdateTemplate(),
                 participant.getName(),
