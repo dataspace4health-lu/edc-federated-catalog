@@ -15,8 +15,8 @@ RUN ./gradlew dependencies --no-daemon || return 0
 # Copy the rest of the source
 COPY extensions ./extensions
 
-# Build the fat jar (skip tests for faster builds, remove -x test if you want them)
-RUN ./gradlew shadowJar --no-daemon -x test
+# Build the fat jar (run tests first - if tests fail, build fails, add -x test if you want to skip tests)
+RUN ./gradlew test shadowJar --no-daemon
 
 # ---- Runtime stage ----
 FROM eclipse-temurin:17-jre
@@ -30,7 +30,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy only the fat jar and configs from builder
 COPY --from=builder /workspace/build/libs/*.jar /app/federated-catalog.jar
 
+# Default log level environment variable (can be overridden at runtime)
+ENV LOG_LEVEL=info
+
 USER 65534
 
-# Run the jar with config + logging
-CMD ["java", "-jar", "/app/federated-catalog.jar"]
+# Run the jar with logging
+CMD ["sh", "-c", "exec java -jar /app/federated-catalog.jar --log-level=$LOG_LEVEL"]

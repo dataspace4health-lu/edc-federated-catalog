@@ -30,8 +30,22 @@ dependencies {
     implementation(libs.edc.dsp)
     implementation(libs.edc.iam.mock)
     implementation(libs.edc.api.observability)
+    
+    // SQL infrastructure
+    implementation(libs.edc.sql.core)
+    implementation(libs.edc.sql.pool)
+    implementation(libs.edc.sql.transactionlocal)
+    implementation(libs.edc.util.lib)
+    implementation(libs.edc.sql.lib)
+    implementation(libs.edc.sql.bootstrapper)
+    implementation(libs.postgres)
 
     implementation(project(":extensions:catalog-node-resolver"))
+    implementation(project(":extensions:store:sql:participant-store-sql"))
+    
+    // Swagger dependencies for API documentation
+    implementation("io.swagger.core.v3:swagger-annotations-jakarta:2.2.20")
+    implementation("org.webjars:swagger-ui:5.10.3")
     
     runtimeOnly(libs.edc.api.observability)
 
@@ -47,9 +61,9 @@ sourceSets {
             // First, clear default srcDirs by removing them one by one
             setSrcDirs(emptySet<File>())
 
-            // Find all directories named 'src' under 'extensions/**/src'
+            // Find all directories named 'src/main/java' under 'extensions'
             val srcFolders = file("extensions").walkTopDown()
-                .filter { it.isDirectory && it.name == "src" }
+                .filter { it.isDirectory && it.path.endsWith("src${File.separator}main${File.separator}java") }
                 .toSet()
 
             // Add those directories as source dirs
