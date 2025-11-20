@@ -74,7 +74,7 @@ public class ParticipantStoreExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
         monitor.info("SQL Participant Store: Initializing...");
-        monitor.info("SQL Participant Store: Using datasource: " + dataSourceName);
+        monitor.debug("SQL Participant Store: Using datasource: " + dataSourceName);
         
         // Create and register the participant store
         participantStore = createSqlParticipantStore(context);
@@ -88,14 +88,14 @@ public class ParticipantStoreExtension implements ServiceExtension {
         
         // Get the catalog path from configuration
         String catalogPath = context.getConfig().getString("web.http.catalog.path", "/api/catalog");
-        monitor.info("SQL Participant Store: Using catalog path: " + catalogPath);
+        monitor.debug("SQL Participant Store: Using catalog path: " + catalogPath);
         
         // Register Swagger UI controller with base path
         var swaggerController = new SwaggerController(catalogPath);
         webService.registerResource("catalog", swaggerController);
         
-        monitor.info("SQL Participant Store: Participant Registry API registered successfully on 'catalog' context");
-        monitor.info("SQL Participant Store: Swagger UI available at " + catalogPath + "/swagger/");
+        monitor.debug("SQL Participant Store: Participant Registry API registered successfully on 'catalog' context");
+        monitor.debug("SQL Participant Store: Swagger UI available at " + catalogPath + "/swagger/");
     }
     
     @Provider
@@ -105,7 +105,7 @@ public class ParticipantStoreExtension implements ServiceExtension {
         }
         
         var monitor = context.getMonitor();
-        monitor.info("SQL Participant Store: Creating store instance...");
+        monitor.debug("SQL Participant Store: Creating store instance...");
         
         participantStore = new SqlParticipantStore(
                 dataSourceRegistry, 
