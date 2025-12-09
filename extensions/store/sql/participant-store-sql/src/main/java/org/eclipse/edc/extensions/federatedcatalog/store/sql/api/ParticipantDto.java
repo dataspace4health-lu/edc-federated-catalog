@@ -27,14 +27,14 @@ import java.util.List;
 @Schema(description = "Represents a participant in the Federated Catalogue")
 public class ParticipantDto {
     
-    @Schema(description = "Unique identifier of the participant", example = "participant-001", required = true)
+    @Schema(description = "Unique identifier of the participant", example = "participant-001", requiredMode = Schema.RequiredMode.REQUIRED)
     private String id;
     
-    @Schema(description = "Human-readable name of the participant", example = "ACME Corporation", required = true)
+    @Schema(description = "Human-readable name of the participant", example = "ACME Corporation", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
     
     @Schema(description = "DSP (Dataspace Protocol) endpoint URL of the participant", 
-            example = "https://participant.example.com/api/dsp", required = true)
+            example = "https://participant.example.com/api/dsp", requiredMode = Schema.RequiredMode.REQUIRED)
     private String dspUrl;  // DSP link endpoint
     
     @Schema(description = "List of supported protocols", 

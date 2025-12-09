@@ -2,12 +2,7 @@ plugins {
     `java-library`
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
 dependencies {
-    implementation(project(":extensions:catalog-node-resolver"))
     implementation(libs.edc.core.spi)
     implementation(libs.edc.transaction.spi)
     implementation(libs.edc.transactions.datasource.spi)

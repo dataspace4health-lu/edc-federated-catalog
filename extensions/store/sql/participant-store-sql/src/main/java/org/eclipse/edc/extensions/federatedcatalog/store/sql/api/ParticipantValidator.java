@@ -29,6 +29,8 @@ public class ParticipantValidator {
     private static final int MAX_NAME_LENGTH = 255;
     private static final int MAX_URL_LENGTH = 500;
     
+    private ParticipantValidator() {}
+
     /**
      * Validates a ParticipantDto and returns list of validation errors.
      * 
