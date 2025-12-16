@@ -16,8 +16,8 @@ RUN ./gradlew dependencies --no-daemon || return 0
 COPY config ./config
 COPY extensions ./extensions
 
-# Build the fat jar
-RUN ./gradlew shadowJar -x test --no-daemon
+# Build the fat jar (tests run locally, skip in Docker for now due to file permission test)
+RUN ./gradlew shadowJar --no-daemon -x test
 
 # ---- Runtime stage ----
 FROM eclipse-temurin:17-jre

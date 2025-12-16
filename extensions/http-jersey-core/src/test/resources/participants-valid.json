@@ -1,0 +1,5 @@
+{
+  "participant1": "https://edc-user1.dataspace4health.local/api/v1/dsp",
+  "participant2": "https://edc-holder1.dataspace4health.local/api/v1/dsp",
+  "participant3": "http://localhost:9090/dsp"
+}

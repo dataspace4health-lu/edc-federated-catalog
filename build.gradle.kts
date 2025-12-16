@@ -21,14 +21,16 @@ allprojects {
 dependencies {
     compileOnly("org.projectlombok:lombok:1.18.26")
     annotationProcessor("org.projectlombok:lombok:1.18.26")
-    compileOnly(libs.edc.fc.spi.crawler)
+    implementation(libs.edc.fc.spi.crawler)
 
     implementation(libs.edc.runtime.core)
     implementation(libs.edc.connector.core)
     implementation(libs.edc.boot)
     implementation(libs.edc.control.plane.core)
     implementation(libs.edc.token.core)
-    implementation(libs.edc.http)
+    implementation(libs.edc.http) {
+        exclude(group = "org.eclipse.edc", module = "jersey-core")
+    }
     implementation(libs.edc.dsp)
     implementation(libs.edc.iam.mock)
     implementation(libs.edc.api.observability)
@@ -43,6 +45,7 @@ dependencies {
     implementation(libs.postgres)
 
     implementation(project(":extensions:catalog-node-resolver"))
+    implementation(project(":extensions:http-jersey-core"))
     implementation(project(":extensions:store:sql:participant-store-sql"))
     
     // Swagger dependencies for API documentation

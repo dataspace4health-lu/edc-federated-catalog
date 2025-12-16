@@ -25,7 +25,7 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.junit.jupiter)
     testImplementation(libs.jersey.common) // For JAX-RS Response implementation
-    testImplementation(libs.jersey.hk2) // For dependency injection
+    testImplementation(libs.jersey.inject) // For dependency injection
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
