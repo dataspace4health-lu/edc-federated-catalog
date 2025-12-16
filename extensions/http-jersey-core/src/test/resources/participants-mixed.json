@@ -1,0 +1,7 @@
+{
+  "participant1": "https://example1.com/api",
+  "participant2": "not-a-valid-url",
+  "participant3": "https://example3.com:8080/api",
+  "participant4": "",
+  "participant5": "https://example5.com/api"
+}
