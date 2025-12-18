@@ -19,10 +19,6 @@ allprojects {
 }
 
 dependencies {
-    compileOnly("org.projectlombok:lombok:1.18.26")
-    annotationProcessor("org.projectlombok:lombok:1.18.26")
-    implementation(libs.edc.fc.spi.crawler)
-
     implementation(libs.edc.runtime.core)
     implementation(libs.edc.connector.core)
     implementation(libs.edc.boot)
@@ -44,18 +40,15 @@ dependencies {
     implementation(libs.edc.sql.bootstrapper)
     implementation(libs.postgres)
 
-    implementation(project(":extensions:catalog-node-resolver"))
-    implementation(project(":extensions:http-jersey-core"))
-    implementation(project(":extensions:store:sql:participant-store-sql"))
-    
-    // Swagger dependencies for API documentation
-    implementation("io.swagger.core.v3:swagger-annotations-jakarta:2.2.20")
-    implementation("org.webjars:swagger-ui:5.10.3")
-    
-    runtimeOnly(libs.edc.api.observability)
+    implementation(project(":extensions:catalog:directory"))
+    implementation(project(":extensions:common:http:client"))
+    implementation(project(":extensions:common:http:jersey-core"))
+    implementation(project(":extensions:store:sql:participant-sql"))
 
-    testReportAggregation(project(":extensions:catalog-node-resolver"))
-    testReportAggregation(project(":extensions:store:sql:participant-store-sql"))
+    testReportAggregation(project(":extensions:catalog:directory"))
+    testReportAggregation(project(":extensions:common:http:client"))
+    testReportAggregation(project(":extensions:common:http:jersey-core"))
+    testReportAggregation(project(":extensions:store:sql:participant-sql"))
 }
 
 application {
@@ -104,6 +97,16 @@ subprojects {
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
         // optional per-task report locations; not necessary for aggregation
+        
+        testLogging {
+            events("FAILED", "PASSED", "SKIPPED")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+            showStandardStreams = true
+        }
+
         reports {
             junitXml.required.set(true)
             junitXml.outputLocation.set(layout.buildDirectory.dir("reports/junit/xml"))
