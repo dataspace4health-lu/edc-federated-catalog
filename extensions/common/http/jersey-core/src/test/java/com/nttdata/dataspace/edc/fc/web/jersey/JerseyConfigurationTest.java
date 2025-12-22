@@ -10,15 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import com.nttdata.dataspace.edc.fc.web.jersey.JerseyConfiguration;
-
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.nttdata.dataspace.edc.fc.web.jersey.TestConstants.*;
 import static com.nttdata.dataspace.edc.fc.web.jersey.TestDataFactory.*;
@@ -381,5 +373,23 @@ class JerseyConfigurationTest {
         var ctx = createMockContainerRequestContext();
         ctx.getHeaders().putSingle("Origin", "https://example.com");
         assertThat(config.getAllowedOrigin(ctx)).isNull();
+    }
+
+    @Test
+    void shouldAllowDirectSetAllowedOrigin() throws Exception {
+        var config = JerseyConfiguration.Builder.newInstance().build();
+        var method = JerseyConfiguration.class.getDeclaredMethod("setAllowedOrigin", String.class);
+        method.setAccessible(true);
+        method.invoke(config, "https://direct-set.com");
+        assertThat(config.getAllowedOrigins()).isEqualTo("https://direct-set.com");
+    }
+
+    @Test
+    void builderWithNoFieldsSetShouldHaveDefaults() {
+        var config = JerseyConfiguration.Builder.newInstance().build();
+        assertThat(config.getAllowedOrigins()).isNull();
+        assertThat(config.getAllowedHeaders()).isNull();
+        assertThat(config.getAllowedMethods()).isNull();
+        assertThat(config.isCorsEnabled()).isFalse();
     }
 }

@@ -54,6 +54,10 @@ public class JerseyConfiguration {
         return null;
     }
 
+    void setAllowedOrigin(String allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
+    }
+
     public String getAllowedHeaders() {
         return allowedHeaders;
     }

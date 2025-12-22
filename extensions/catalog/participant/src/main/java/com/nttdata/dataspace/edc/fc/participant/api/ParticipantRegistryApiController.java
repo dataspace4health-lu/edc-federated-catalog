@@ -12,7 +12,7 @@
  *
  */
 
-package com.nttdata.dataspace.edc.fc.store.sql.api;
+package com.nttdata.dataspace.edc.fc.participant.api;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -75,14 +75,14 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         if (result.succeeded()) {
             monitor.info("Successfully created participant: " + dto.getId());
             return Response.status(Response.Status.CREATED)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.success(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.success(
                             toDto(participant),
                             "Participant created successfully"))
                     .build();
         } else {
             monitor.severe("Failed to create participant: " + result.getFailureDetail());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                             "CREATE_FAILED",
                             result.getFailureDetail()))
                     .build();
@@ -108,7 +108,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         }
         
         monitor.debug("Successfully retrieved participant: " + id);
-        return Response.ok(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.success(toDto(participant))).build();
+        return Response.ok(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.success(toDto(participant))).build();
     }
     
     @Override
@@ -123,11 +123,11 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
                     .toList();
             
             monitor.debug("Successfully retrieved " + participants.size() + " participants");
-            return Response.ok(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.success(participants)).build();
+            return Response.ok(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.success(participants)).build();
         } catch (Exception e) {
             monitor.severe("Failed to list participants", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                             "LIST_FAILED",
                             "Failed to retrieve participants: " + e.getMessage()))
                     .build();
@@ -143,7 +143,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         // Validate that IDs match
         if (!id.equals(dto.getId())) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                             "ID_MISMATCH",
                             "Path ID does not match request body ID"))
                     .build();
@@ -175,14 +175,14 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         var result = store.update(updated);
         if (result.succeeded()) {
             monitor.info("Successfully updated participant: " + id);
-            return Response.ok(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.success(
+            return Response.ok(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.success(
                     toDto(updated),
                     "Participant updated successfully"))
                     .build();
         } else {
             monitor.severe("Failed to update participant: " + result.getFailureDetail());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                             "UPDATE_FAILED",
                             result.getFailureDetail()))
                     .build();
@@ -215,7 +215,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         } else {
             monitor.severe("Failed to delete participant: " + result.getFailureDetail());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                             "DELETE_FAILED",
                             result.getFailureDetail()))
                     .build();
@@ -241,7 +241,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         if (existing != null) {
             monitor.warning("Participant already exists: " + dto.getId());
             return Response.status(Response.Status.CONFLICT)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                             "PARTICIPANT_EXISTS",
                             "Participant with ID '" + dto.getId() + "' already exists"))
                     .build();
@@ -262,7 +262,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         if (!validationErrors.isEmpty()) {
             monitor.warning("Validation failed for participant " + operation + ": " + String.join(", ", validationErrors));
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                             "VALIDATION_ERROR",
                             String.join("; ", validationErrors)))
                     .build();
@@ -280,7 +280,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         List<String> validationErrors = ParticipantValidator.validateId(id);
         if (!validationErrors.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                    .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                             "INVALID_ID",
                             String.join("; ", validationErrors)))
                     .build();
@@ -296,7 +296,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
      */
     private Response buildNotFoundResponse(String id) {
         return Response.status(Response.Status.NOT_FOUND)
-                .entity(com.nttdata.dataspace.edc.fc.store.sql.api.ApiResponse.error(
+                .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.error(
                         "NOT_FOUND",
                         "Participant with ID '" + id + "' not found"))
                 .build();

@@ -1,31 +1,20 @@
 package com.nttdata.dataspace.edc.fc.web.jersey;
 
+import com.nttdata.dataspace.edc.fc.store.sql.Participant;
+import com.nttdata.dataspace.edc.fc.store.sql.ParticipantStore;
+
 import org.eclipse.edc.spi.monitor.Monitor;
-import org.eclipse.edc.spi.types.TypeManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Service responsible for loading and managing participant origins from a JSON file.
- * 
- * This loader reads a JSON file containing participant information (participant ID to DSP URL mappings)
- * and extracts HTTP origins from the URLs for CORS validation purposes.
- * 
- * Expected File Format:
- * {
- *   "participant1": "https://example.com:8080/api/v1/dsp",
- *   "participant2": "http://localhost:9090/dsp"
- * }
- * 
+ * Service responsible for loading and managing participant origins from DB.
  * Origin Extraction:
  * Origins are extracted as scheme + host + port (if non-default):
  * - https://example.com:8080/api/v1/dsp → https://example.com:8080
@@ -34,65 +23,35 @@ import java.util.Set;
  */
 class OriginsLoader {
 
-    private final TypeManager typeManager;
     private final Monitor monitor;
-    private final String filePath;
+    private final ParticipantStore participantStore;
 
     /**
      * Creates a new origin loader.
      *
-     * @param typeManager the type manager for JSON deserialization
      * @param monitor the monitor for logging
-     * @param filePath the absolute path to the participants JSON file
+     * @param participantStore participant db store
      */
-    OriginsLoader(@NotNull TypeManager typeManager, @NotNull Monitor monitor, @NotNull String filePath) {
-        this.typeManager = typeManager;
+    OriginsLoader(@NotNull Monitor monitor, @NotNull ParticipantStore participantStore) {
         this.monitor = monitor;
-        this.filePath = filePath;
+        this.participantStore = participantStore;
     }
 
     /**
-     * Loads participant origins from the configured file path.
+     * Loads participant origins from database.
      * 
-     * This method is designed to be fault-tolerant and will return an empty set if the file
-     * doesn't exist, cannot be read, or contains invalid data. All errors are logged but do not
-     * throw exceptions to prevent disrupting the CORS extension initialization.
-     *
-     * @return Set of participant origins extracted from the file, or empty set if loading fails
+     * @return Set of participant origins extracted from the database, or empty set if loading fails
      */
     @NotNull
     Set<String> loadOrigins() {
-        File participantFile = new File(filePath);
-
-        if (!participantFile.exists()) {
-            monitor.warning(String.format(
-                    "%s: Participants file not found at '%s'. Participant-based CORS validation disabled.",
-                    this.getClass().getSimpleName(),
-                    filePath
-            ));
-            return Collections.emptySet();
-        }
-
-        if (!participantFile.canRead()) {
-            monitor.warning(String.format(
-                    "%s: Participants file at '%s' is not readable. Check file permissions. " +
-                    "Participant-based CORS validation disabled.",
-                    this.getClass().getSimpleName(),
-                    filePath
-            ));
-            return Collections.emptySet();
-        }
-
         try {
-            String content = Files.readString(participantFile.toPath());
-            @SuppressWarnings("unchecked")
-            Map<String, String> participants = typeManager.readValue(content, Map.class);
+            Set<Participant> participants =
+                participantStore.findAll().collect(Collectors.toSet());
 
             if (participants == null || participants.isEmpty()) {
                 monitor.warning(String.format(
-                        "%s: Participants file at '%s' is empty. No origins loaded.",
-                        this.getClass().getSimpleName(),
-                        filePath
+                        "%s: Participants list is empty. No origins loaded.",
+                        this.getClass().getSimpleName()
                 ));
                 return Collections.emptySet();
             }
@@ -100,20 +59,19 @@ class OriginsLoader {
             var origins = extractOriginsFromParticipants(participants);
             
             monitor.info(String.format(
-                    "%s: Successfully loaded %d participant origin(s) from '%s'",
+                    "%s: Successfully loaded %d participant origin(s) from database",
                     this.getClass().getSimpleName(),
-                    origins.size(),
-                    filePath
+                    origins.size()
             ));
             
             return origins;
 
-        } catch (IOException | RuntimeException e) {
+        } catch (RuntimeException e) {
             monitor.severe(String.format(
-                    "%s: Failed to read participants file at '%s': %s. " +
+                    "%s: Failed to read participants from database: %s. " +
                     "Participant-based CORS validation disabled.",
                     this.getClass().getSimpleName(),
-                    filePath, e.getMessage()
+                    e.getMessage()
             ), e);
             return Collections.emptySet();
         }
@@ -122,16 +80,16 @@ class OriginsLoader {
     /**
      * Extracts HTTP origins from a map of participant URLs.
      *
-     * @param participants map of participant ID to URL
+     * @param participants map of participant
      * @return set of extracted origins
      */
     @NotNull
-    private Set<String> extractOriginsFromParticipants(@NotNull Map<String, String> participants) {
+    private Set<String> extractOriginsFromParticipants(@NotNull Set<Participant> participants) {
         Set<String> origins = new HashSet<>();
 
-        for (Map.Entry<String, String> entry : participants.entrySet()) {
-            String participantId = entry.getKey();
-            String url = entry.getValue();
+        for (Participant entry : participants) {
+            String participantId = entry.getId();
+            String url = entry.getEndpoint();
 
             if (url == null || url.isBlank()) {
                 monitor.warning(String.format(

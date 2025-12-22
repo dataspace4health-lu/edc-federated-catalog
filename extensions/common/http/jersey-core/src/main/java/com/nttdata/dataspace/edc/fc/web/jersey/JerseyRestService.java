@@ -15,12 +15,15 @@
 
 package com.nttdata.dataspace.edc.fc.web.jersey;
 
-import org.eclipse.edc.spi.EdcException;
-import org.eclipse.edc.spi.monitor.Monitor;
-import org.eclipse.edc.spi.types.TypeManager;
+import com.nttdata.dataspace.edc.fc.store.sql.ParticipantStore;
 import com.nttdata.dataspace.edc.fc.web.jersey.feature.DynamicResourceFeature;
 import com.nttdata.dataspace.edc.fc.web.jersey.mapper.EdcApiExceptionMapper;
 import com.nttdata.dataspace.edc.fc.web.jersey.mapper.UnexpectedExceptionMapper;
+
+import org.eclipse.edc.spi.EdcException;
+import org.eclipse.edc.spi.monitor.Monitor;
+import org.eclipse.edc.spi.types.TypeManager;
+
 import org.eclipse.edc.web.jersey.providers.jsonld.ObjectMapperProvider;
 import org.eclipse.edc.web.spi.WebServer;
 import org.eclipse.edc.web.spi.WebService;
@@ -30,9 +33,13 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.toSet;
@@ -50,12 +57,14 @@ public class JerseyRestService implements WebService {
     private final Map<String, Map<Class<?>, List<Object>>> dynamicResources = new HashMap<>();
     private final JerseyConfiguration configuration;
     private final List<Supplier<Object>> additionalInstances = new ArrayList<>();
+    private final ParticipantStore participantStore;
 
-    public JerseyRestService(WebServer webServer, TypeManager typeManager, JerseyConfiguration configuration, Monitor monitor) {
+    public JerseyRestService(WebServer webServer, TypeManager typeManager, JerseyConfiguration configuration, Monitor monitor, ParticipantStore participantStore) {
         this.webServer = webServer;
         this.typeManager = typeManager;
         this.configuration = configuration;
         this.monitor = monitor;
+        this.participantStore = participantStore;
     }
 
     @Override
@@ -84,6 +93,27 @@ public class JerseyRestService implements WebService {
 
     public void start() {
         try {
+            var allowedOrigins = configuration.getAllowedOrigins();
+            
+            var loader = new OriginsLoader(monitor, participantStore);
+            Set<String> participantOrigins = loader.loadOrigins();
+
+            Set<String> mergedOrigins = new LinkedHashSet<>();
+            Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && !s.equals("*"))
+                .map(String::toLowerCase)
+                .forEach(mergedOrigins::add);
+
+            participantOrigins.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toLowerCase)
+                .forEach(mergedOrigins::add);
+
+            configuration.setAllowedOrigin(String.join(",", mergedOrigins));
+            
             controllers.forEach(this::registerContext);
         } catch (Exception e) {
             throw new EdcException(e);

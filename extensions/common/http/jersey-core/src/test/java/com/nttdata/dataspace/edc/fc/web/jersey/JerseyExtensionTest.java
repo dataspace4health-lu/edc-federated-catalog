@@ -7,18 +7,14 @@ import org.eclipse.edc.web.spi.WebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
 import static com.nttdata.dataspace.edc.fc.web.jersey.TestConstants.*;
 import static com.nttdata.dataspace.edc.fc.web.jersey.TestDataFactory.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
