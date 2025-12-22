@@ -41,11 +41,13 @@ dependencies {
     implementation(libs.postgres)
 
     implementation(project(":extensions:catalog:directory"))
+    implementation(project(":extensions:catalog:participant"))
     implementation(project(":extensions:common:http:client"))
     implementation(project(":extensions:common:http:jersey-core"))
     implementation(project(":extensions:store:sql:participant-sql"))
 
     testReportAggregation(project(":extensions:catalog:directory"))
+    testReportAggregation(project(":extensions:catalog:participant"))
     testReportAggregation(project(":extensions:common:http:client"))
     testReportAggregation(project(":extensions:common:http:jersey-core"))
     testReportAggregation(project(":extensions:store:sql:participant-sql"))

@@ -11,12 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
-import com.nttdata.dataspace.edc.fc.web.jersey.JerseyConfiguration;
-
 import static com.nttdata.dataspace.edc.fc.web.jersey.TestConstants.*;
 import static com.nttdata.dataspace.edc.fc.web.jersey.TestDataFactory.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

@@ -12,7 +12,7 @@
  *
  */
 
-package com.nttdata.dataspace.edc.fc.store.sql.api;
+package com.nttdata.dataspace.edc.fc.participant.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -6,8 +6,6 @@ import org.eclipse.edc.spi.types.TypeManager;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 
-import com.nttdata.dataspace.edc.fc.web.jersey.JerseyConfiguration;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

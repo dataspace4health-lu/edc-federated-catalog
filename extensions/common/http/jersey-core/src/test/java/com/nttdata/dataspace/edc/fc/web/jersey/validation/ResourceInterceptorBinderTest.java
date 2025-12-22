@@ -1,6 +1,5 @@
 package com.nttdata.dataspace.edc.fc.web.jersey.validation;
 
-import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

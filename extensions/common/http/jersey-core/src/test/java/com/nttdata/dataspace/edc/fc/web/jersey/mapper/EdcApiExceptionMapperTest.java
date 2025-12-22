@@ -7,7 +7,6 @@ import org.eclipse.edc.validator.spi.Violation;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 

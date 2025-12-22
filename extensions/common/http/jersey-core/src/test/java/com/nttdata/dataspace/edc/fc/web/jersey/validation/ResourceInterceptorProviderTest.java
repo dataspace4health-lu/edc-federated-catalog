@@ -1,6 +1,5 @@
 package com.nttdata.dataspace.edc.fc.web.jersey.validation;
 
-import org.eclipse.edc.web.spi.validation.InterceptorFunction;
 import org.glassfish.jersey.server.model.Invocable;
 import org.junit.jupiter.api.Test;
 

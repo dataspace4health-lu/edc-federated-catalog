@@ -20,12 +20,11 @@ class ParticipantStoreExtensionTest {
         // Create mocks for all injected fields
         var dataSourceRegistry = mock(org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry.class);
         var transactionContext = mock(org.eclipse.edc.transaction.spi.TransactionContext.class);
-        var webService = mock(org.eclipse.edc.web.spi.WebService.class);
         var typeManager = mock(org.eclipse.edc.spi.types.TypeManager.class);
+        var monitor = mock(org.eclipse.edc.spi.monitor.Monitor.class);
         var queryExecutor = mock(org.eclipse.edc.sql.QueryExecutor.class);
         var sqlSchemaBootstrapper = mock(org.eclipse.edc.sql.bootstrapper.SqlSchemaBootstrapper.class);
         var statements = mock(com.nttdata.dataspace.edc.fc.store.sql.schema.ParticipantStatements.class);
-        var monitor = mock(org.eclipse.edc.spi.monitor.Monitor.class);
 
         // Set all injected fields via reflection
         java.lang.reflect.Field f;
@@ -33,10 +32,10 @@ class ParticipantStoreExtensionTest {
         f.setAccessible(true); f.set(extension, dataSourceRegistry);
         f = extension.getClass().getDeclaredField("transactionContext");
         f.setAccessible(true); f.set(extension, transactionContext);
-        f = extension.getClass().getDeclaredField("webService");
-        f.setAccessible(true); f.set(extension, webService);
         f = extension.getClass().getDeclaredField("typeManager");
         f.setAccessible(true); f.set(extension, typeManager);
+        f = extension.getClass().getDeclaredField("monitor");
+        f.setAccessible(true); f.set(extension, monitor);
         f = extension.getClass().getDeclaredField("queryExecutor");
         f.setAccessible(true); f.set(extension, queryExecutor);
         f = extension.getClass().getDeclaredField("sqlSchemaBootstrapper");
@@ -53,7 +52,6 @@ class ParticipantStoreExtensionTest {
 
         // Stub methods that are called in initialize
         doNothing().when(sqlSchemaBootstrapper).addStatementFromResource(anyString(), anyString());
-        doNothing().when(webService).registerResource(anyString(), any());
 
         // Stub context.getConfig().getString(anyString(), anyString()) to return "/api/catalog"
         when(context.getConfig().getString(anyString(), anyString())).thenReturn("/api/catalog");

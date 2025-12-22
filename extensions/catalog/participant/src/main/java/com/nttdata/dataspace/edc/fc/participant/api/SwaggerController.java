@@ -12,7 +12,7 @@
  *
  */
 
-package com.nttdata.dataspace.edc.fc.store.sql.api;
+package com.nttdata.dataspace.edc.fc.participant.api;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.ws.rs.GET;

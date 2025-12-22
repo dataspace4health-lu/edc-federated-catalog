@@ -8,20 +8,19 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Initial API and implementation
+ *       Initial Participant SQL Store implementation
  *
  */
 
 package com.nttdata.dataspace.edc.fc.store.sql;
 
-import com.nttdata.dataspace.edc.fc.store.sql.api.ParticipantRegistryApiController;
-import com.nttdata.dataspace.edc.fc.store.sql.api.SwaggerController;
 import com.nttdata.dataspace.edc.fc.store.sql.schema.ParticipantStatements;
 import com.nttdata.dataspace.edc.fc.store.sql.schema.postgres.PostgresDialectStatements;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Provider;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
+import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.spi.types.TypeManager;
@@ -29,7 +28,6 @@ import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.bootstrapper.SqlSchemaBootstrapper;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
-import org.eclipse.edc.web.spi.WebService;
 
 /**
  * SQL Participant Store Extension following EDC patterns.
@@ -52,10 +50,10 @@ public class ParticipantStoreExtension implements ServiceExtension {
     private ParticipantStatements statements;
     
     @Inject
-    private WebService webService;
-    
-    @Inject
     private TypeManager typeManager;
+
+    @Inject
+    private Monitor monitor;
     
     @Inject
     private QueryExecutor queryExecutor;
@@ -72,7 +70,6 @@ public class ParticipantStoreExtension implements ServiceExtension {
     
     @Override
     public void initialize(ServiceExtensionContext context) {
-        var monitor = context.getMonitor();
         monitor.info("SQL Participant Store: Initializing...");
         monitor.debug("SQL Participant Store: Using datasource: " + dataSourceName);
         
@@ -81,21 +78,6 @@ public class ParticipantStoreExtension implements ServiceExtension {
         
         // Register schema for bootstrap
         sqlSchemaBootstrapper.addStatementFromResource(dataSourceName, "participant-schema.sql");
-        
-        // Create and register the API controller
-        var apiController = new ParticipantRegistryApiController(participantStore, monitor);
-        webService.registerResource("catalog", apiController);
-        
-        // Get the catalog path from configuration
-        String catalogPath = context.getConfig().getString("web.http.catalog.path", "/api/catalog");
-        monitor.debug("SQL Participant Store: Using catalog path: " + catalogPath);
-        
-        // Register Swagger UI controller with base path
-        var swaggerController = new SwaggerController(catalogPath);
-        webService.registerResource("catalog", swaggerController);
-        
-        monitor.debug("SQL Participant Store: Participant Registry API registered successfully on 'catalog' context");
-        monitor.debug("SQL Participant Store: Swagger UI available at " + catalogPath + "/swagger/");
     }
     
     @Provider
@@ -104,7 +86,6 @@ public class ParticipantStoreExtension implements ServiceExtension {
             return participantStore;
         }
         
-        var monitor = context.getMonitor();
         monitor.debug("SQL Participant Store: Creating store instance...");
         
         participantStore = new SqlParticipantStore(
