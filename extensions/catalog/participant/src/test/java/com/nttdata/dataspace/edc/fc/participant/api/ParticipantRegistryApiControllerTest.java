@@ -38,15 +38,6 @@ class ParticipantRegistryApiControllerTest {
                 .build();
 
         when(store.findById("p1")).thenReturn(null);
-        Participant participant = Participant.builder()
-                .id("p1")
-                .name("Test Participant")
-                .endpoint("http://example.com")
-                .supportedProtocols(List.of("protocol1"))
-                .createdAt(System.currentTimeMillis())
-                .updatedAt(System.currentTimeMillis())
-                .build();
-        // Use ArgumentCaptor to capture the participant passed to save
         when(store.save(any(Participant.class))).thenReturn(org.eclipse.edc.spi.result.StoreResult.success(null));
 
         Response response = controller.createParticipant(dto);
@@ -57,10 +48,162 @@ class ParticipantRegistryApiControllerTest {
         verify(monitor).info(contains("Successfully created participant"));
     }
 
-    // Additional tests for other scenarios should be implemented here:
-    // - createParticipant: validation error, already exists, store failure
-    // - getParticipant: success, not found, invalid id
-    // - listParticipants: success, store failure
-    // - updateParticipant: success, id mismatch, validation error, not found, store failure
-    // - deleteParticipant: success, not found, invalid id, store failure
+    @Test
+    void createParticipant_validationError_nullId() {
+        ParticipantDto dto = ParticipantDto.builder()
+                .id(null)
+                .name("Test")
+                .dspUrl("http://example.com")
+                .supportedProtocols(List.of("protocol1"))
+                .build();
+
+        Response response = controller.createParticipant(dto);
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void createParticipant_alreadyExists() {
+        ParticipantDto dto = ParticipantDto.builder()
+                .id("p1")
+                .name("Test")
+                .dspUrl("http://example.com")
+                .supportedProtocols(List.of("protocol1"))
+                .build();
+
+        when(store.findById("p1")).thenReturn(Participant.builder().id("p1").name("Existing").endpoint("http://x.com").supportedProtocols(List.of()).createdAt(1L).updatedAt(1L).build());
+
+        Response response = controller.createParticipant(dto);
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void createParticipant_storeFailure() {
+        ParticipantDto dto = ParticipantDto.builder()
+                .id("p1")
+                .name("Test")
+                .dspUrl("http://example.com")
+                .supportedProtocols(List.of("protocol1"))
+                .build();
+
+        when(store.findById("p1")).thenReturn(null);
+        when(store.save(any(Participant.class))).thenReturn(org.eclipse.edc.spi.result.StoreResult.generalError("DB error"));
+
+        Response response = controller.createParticipant(dto);
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void getParticipant_success() {
+        Participant p = Participant.builder().id("p1").name("Test").endpoint("http://x.com").supportedProtocols(List.of()).createdAt(1L).updatedAt(1L).build();
+        when(store.findById("p1")).thenReturn(p);
+
+        Response response = controller.getParticipant("p1");
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void getParticipant_notFound() {
+        when(store.findById("p1")).thenReturn(null);
+
+        Response response = controller.getParticipant("p1");
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void getParticipant_invalidId() {
+        Response response = controller.getParticipant("");
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void listParticipants_success() {
+        Participant p = Participant.builder().id("p1").name("Test").endpoint("http://x.com").supportedProtocols(List.of()).createdAt(1L).updatedAt(1L).build();
+        when(store.findAll()).thenReturn(java.util.stream.Stream.of(p));
+
+        Response response = controller.listParticipants();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void listParticipants_storeException() {
+        when(store.findAll()).thenThrow(new RuntimeException("DB error"));
+
+        Response response = controller.listParticipants();
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void updateParticipant_success() {
+        ParticipantDto dto = ParticipantDto.builder().id("p1").name("Updated").dspUrl("http://new.com").supportedProtocols(List.of("p1")).build();
+        Participant existing = Participant.builder().id("p1").name("Old").endpoint("http://old.com").supportedProtocols(List.of()).createdAt(1L).updatedAt(1L).build();
+
+        when(store.findById("p1")).thenReturn(existing);
+        when(store.update(any(Participant.class))).thenReturn(org.eclipse.edc.spi.result.StoreResult.success(null));
+
+        Response response = controller.updateParticipant("p1", dto);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void updateParticipant_idMismatch() {
+        ParticipantDto dto = ParticipantDto.builder().id("p2").name("Test").dspUrl("http://x.com").supportedProtocols(List.of()).build();
+
+        Response response = controller.updateParticipant("p1", dto);
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void updateParticipant_notFound() {
+        ParticipantDto dto = ParticipantDto.builder().id("p1").name("Test").dspUrl("http://x.com").supportedProtocols(List.of("p1")).build();
+        when(store.findById("p1")).thenReturn(null);
+
+        Response response = controller.updateParticipant("p1", dto);
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void updateParticipant_storeFailure() {
+        ParticipantDto dto = ParticipantDto.builder().id("p1").name("Test").dspUrl("http://x.com").supportedProtocols(List.of("p1")).build();
+        Participant existing = Participant.builder().id("p1").name("Old").endpoint("http://old.com").supportedProtocols(List.of()).createdAt(1L).updatedAt(1L).build();
+
+        when(store.findById("p1")).thenReturn(existing);
+        when(store.update(any(Participant.class))).thenReturn(org.eclipse.edc.spi.result.StoreResult.generalError("DB error"));
+
+        Response response = controller.updateParticipant("p1", dto);
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void deleteParticipant_success() {
+        Participant existing = Participant.builder().id("p1").name("Test").endpoint("http://x.com").supportedProtocols(List.of()).createdAt(1L).updatedAt(1L).build();
+        when(store.findById("p1")).thenReturn(existing);
+        when(store.delete("p1")).thenReturn(org.eclipse.edc.spi.result.StoreResult.success(existing));
+
+        Response response = controller.deleteParticipant("p1");
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void deleteParticipant_notFound() {
+        when(store.findById("p1")).thenReturn(null);
+
+        Response response = controller.deleteParticipant("p1");
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void deleteParticipant_invalidId() {
+        Response response = controller.deleteParticipant("");
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void deleteParticipant_storeFailure() {
+        Participant existing = Participant.builder().id("p1").name("Test").endpoint("http://x.com").supportedProtocols(List.of()).createdAt(1L).updatedAt(1L).build();
+        when(store.findById("p1")).thenReturn(existing);
+        when(store.delete("p1")).thenReturn(org.eclipse.edc.spi.result.StoreResult.generalError("DB error"));
+
+        Response response = controller.deleteParticipant("p1");
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+    }
 }
