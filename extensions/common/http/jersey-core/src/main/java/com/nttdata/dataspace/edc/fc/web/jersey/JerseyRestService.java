@@ -1,0 +1,168 @@
+/*
+ *  Copyright (c) 2020, 2021 Microsoft Corporation
+ *
+ *  This program and the accompanying materials are made available under the
+ *  terms of the Apache License, Version 2.0 which is available at
+ *  https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Contributors:
+ *       Microsoft Corporation - initial API and implementation
+ *       Bayerische Motoren Werke Aktiengesellschaft (BMW AG) - improvements
+ *
+ */
+
+package com.nttdata.dataspace.edc.fc.web.jersey;
+
+import com.nttdata.dataspace.edc.fc.store.sql.ParticipantStore;
+import com.nttdata.dataspace.edc.fc.web.jersey.feature.DynamicResourceFeature;
+import com.nttdata.dataspace.edc.fc.web.jersey.mapper.EdcApiExceptionMapper;
+import com.nttdata.dataspace.edc.fc.web.jersey.mapper.UnexpectedExceptionMapper;
+
+import org.eclipse.edc.spi.EdcException;
+import org.eclipse.edc.spi.monitor.Monitor;
+import org.eclipse.edc.spi.types.TypeManager;
+
+import org.eclipse.edc.web.jersey.providers.jsonld.ObjectMapperProvider;
+import org.eclipse.edc.web.spi.WebServer;
+import org.eclipse.edc.web.spi.WebService;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.servlet.ServletContainer;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Supplier;
+
+import static java.util.stream.Collectors.toSet;
+import static org.eclipse.edc.spi.types.TypeManager.DEFAULT_TYPE_CONTEXT;
+import static org.glassfish.jersey.server.ServerProperties.WADL_FEATURE_DISABLE;
+
+public class JerseyRestService implements WebService {
+    private static final String DEFAULT_CONTEXT_ALIAS = "default";
+
+    private final WebServer webServer;
+    private final TypeManager typeManager;
+    private final Monitor monitor;
+
+    private final Map<String, List<Object>> controllers = new HashMap<>();
+    private final Map<String, Map<Class<?>, List<Object>>> dynamicResources = new HashMap<>();
+    private final JerseyConfiguration configuration;
+    private final List<Supplier<Object>> additionalInstances = new ArrayList<>();
+    private final ParticipantStore participantStore;
+
+    public JerseyRestService(WebServer webServer, TypeManager typeManager, JerseyConfiguration configuration, Monitor monitor, ParticipantStore participantStore) {
+        this.webServer = webServer;
+        this.typeManager = typeManager;
+        this.configuration = configuration;
+        this.monitor = monitor;
+        this.participantStore = participantStore;
+    }
+
+    @Override
+    public void registerResource(Object resource) {
+        controllers.computeIfAbsent(DEFAULT_CONTEXT_ALIAS, s -> new ArrayList<>())
+            .add(resource);
+    }
+
+    @Override
+    public void registerResource(String contextAlias, Object resource) {
+        controllers.computeIfAbsent(contextAlias, s -> new ArrayList<>())
+            .add(resource);
+    }
+
+    @Override
+    public void registerDynamicResource(String contextAlias, Class<?> target, Object resource) {
+        dynamicResources
+            .computeIfAbsent(contextAlias, s -> new HashMap<>())
+            .computeIfAbsent(target, s -> new ArrayList<>())
+            .add(resource);
+    }
+
+    void registerInstance(Supplier<Object> instance) {
+        additionalInstances.add(instance);
+    }
+
+    public void start() {
+        try {
+            var allowedOrigins = configuration.getAllowedOrigins();
+            
+            var loader = new OriginsLoader(monitor, participantStore);
+            Set<String> participantOrigins = loader.loadOrigins();
+
+            Set<String> mergedOrigins = new LinkedHashSet<>();
+            Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && !s.equals("*"))
+                .map(String::toLowerCase)
+                .forEach(mergedOrigins::add);
+
+            participantOrigins.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toLowerCase)
+                .forEach(mergedOrigins::add);
+
+            configuration.setAllowedOrigin(String.join(",", mergedOrigins));
+            
+            controllers.forEach(this::registerContext);
+        } catch (Exception e) {
+            throw new EdcException(e);
+        }
+    }
+
+    private void registerContext(String contextAlias, List<Object> controllers) {
+        var resourceConfig = new ResourceConfig();
+
+        var dynamicResourcesForContext = dynamicResources.computeIfAbsent(contextAlias, s -> new HashMap<>());
+
+        // Disable WADL as it is not used and emits a warning message about JAXB (which is also not used)
+        resourceConfig.property(WADL_FEATURE_DISABLE, Boolean.TRUE);
+
+        // Register controller (JAX-RS resources) with Jersey. Instances instead of classes are used so extensions may inject them with dependencies and manage their lifecycle.
+        // In order to use instances with Jersey, the controller types must be registered along with an {@link AbstractBinder} that maps those types to the instances.
+        resourceConfig.registerClasses(controllers.stream().map(Object::getClass).collect(toSet()));
+        resourceConfig.registerInstances(new Binder(controllers));
+        resourceConfig.registerInstances(new ObjectMapperProvider(typeManager, DEFAULT_TYPE_CONTEXT));
+        resourceConfig.registerInstances(new EdcApiExceptionMapper());
+        resourceConfig.registerInstances(new UnexpectedExceptionMapper(monitor));
+        resourceConfig.registerInstances(new DynamicResourceFeature(dynamicResourcesForContext));
+
+        additionalInstances.forEach(supplier -> resourceConfig.registerInstances(supplier.get()));
+
+        if (configuration.isCorsEnabled()) {
+            resourceConfig.register(new CorsFilter(configuration));
+        }
+        resourceConfig.register(MultiPartFeature.class);
+
+        var servletContainer = new ServletContainer(resourceConfig);
+        webServer.registerServlet(contextAlias, servletContainer);
+    }
+
+    /**
+     * Maps (JAX-RS resource) instances to types.
+     */
+    private static class Binder extends AbstractBinder {
+
+        private final List<Object> controllers;
+
+        Binder(List<Object> controllers) {
+            this.controllers = controllers;
+        }
+
+        @Override
+        protected void configure() {
+            controllers.forEach(c -> bind(c).to((Class<? super Object>) c.getClass()));
+        }
+    }
+
+}

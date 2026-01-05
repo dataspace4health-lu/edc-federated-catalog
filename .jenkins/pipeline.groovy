@@ -46,7 +46,14 @@ pipeline {
             }
             post {
                 always {
-                    junit testResults: 'build/test-results/**/*.xml', allowEmptyResults: true
+                    junit testResults: '**/build/reports/junit/xml/*.xml', allowEmptyResults: true
+                    publishHTML(
+                        target: [
+                            reportDir: 'build/reports/junit/html',
+                            reportFiles: 'index.html',
+                            reportName: 'Unit Test Report'
+                        ]
+                    )
                 }
             }
         }
@@ -60,9 +67,15 @@ pipeline {
                             sh """
                                 ${scannerHome}/bin/sonar-scanner -X \
                                     -Dsonar.projectKey=${DOCKER_IMAGE} \
-                                    -Dsonar.sources=. \
-                                    -Dsonar.java.binaries=extensions/**/build/classes/java/main \
+                                    -Dsonar.sources=extensions \
+                                    -Dsonar.inclusions=**/src/main/** \
+                                    -Dsonar.tests=extensions \
+                                    -Dsonar.test.inclusions=**/src/test/** \
+                                    -Dsonar.java.binaries=build/classes,extensions/**/build/classes \
                                     -Dsonar.java.libraries=build/libs,extensions/**/build/libs \
+                                    -Dsonar.java.test.binaries=extensions/**/build/classes/java/test \
+                                    -Dsonar.junit.reportPaths=extensions/**/build/reports/junit/xml \
+                                    -Dsonar.coverage.jacoco.xmlReportPaths=extensions/**/build/reports/jacoco/xml/jacoco.xml \
                                     -Dsonar.branch.name=${env.GIT_BRANCH.replaceFirst("^origin/", "")}
                             """
                         }

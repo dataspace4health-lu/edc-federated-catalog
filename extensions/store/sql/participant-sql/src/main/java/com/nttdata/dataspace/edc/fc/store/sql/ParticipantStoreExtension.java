@@ -1,0 +1,108 @@
+/*
+ *  Copyright (c) 2025
+ *
+ *  This program and the accompanying materials are made available under the
+ *  terms of the Apache License, Version 2.0 which is available at
+ *  https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Contributors:
+ *       Initial Participant SQL Store implementation
+ *
+ */
+
+package com.nttdata.dataspace.edc.fc.store.sql;
+
+import com.nttdata.dataspace.edc.fc.store.sql.schema.ParticipantStatements;
+import com.nttdata.dataspace.edc.fc.store.sql.schema.postgres.PostgresDialectStatements;
+import org.eclipse.edc.runtime.metamodel.annotation.Extension;
+import org.eclipse.edc.runtime.metamodel.annotation.Inject;
+import org.eclipse.edc.runtime.metamodel.annotation.Provider;
+import org.eclipse.edc.runtime.metamodel.annotation.Setting;
+import org.eclipse.edc.spi.monitor.Monitor;
+import org.eclipse.edc.spi.system.ServiceExtension;
+import org.eclipse.edc.spi.system.ServiceExtensionContext;
+import org.eclipse.edc.spi.types.TypeManager;
+import org.eclipse.edc.sql.QueryExecutor;
+import org.eclipse.edc.sql.bootstrapper.SqlSchemaBootstrapper;
+import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
+import org.eclipse.edc.transaction.spi.TransactionContext;
+
+/**
+ * SQL Participant Store Extension following EDC patterns.
+ */
+@Extension(value = "SQL Participant Store")
+public class ParticipantStoreExtension implements ServiceExtension {
+    
+    @Setting(description = "The datasource to be used", 
+             defaultValue = DataSourceRegistry.DEFAULT_DATASOURCE, 
+             key = "edc.sql.store.participant.datasource")
+    private String dataSourceName;
+    
+    @Inject
+    private DataSourceRegistry dataSourceRegistry;
+    
+    @Inject
+    private TransactionContext transactionContext;
+    
+    @Inject(required = false)
+    private ParticipantStatements statements;
+    
+    @Inject
+    private TypeManager typeManager;
+
+    @Inject
+    private Monitor monitor;
+    
+    @Inject
+    private QueryExecutor queryExecutor;
+    
+    @Inject
+    private SqlSchemaBootstrapper sqlSchemaBootstrapper;
+    
+    private ParticipantStore participantStore;
+    
+    @Override
+    public String name() {
+        return "SQL Participant Store";
+    }
+    
+    @Override
+    public void initialize(ServiceExtensionContext context) {
+        monitor.info("SQL Participant Store: Initializing...");
+        monitor.debug("SQL Participant Store: Using datasource: " + dataSourceName);
+        
+        // Create and register the participant store
+        participantStore = createSqlParticipantStore(context);
+        
+        // Register schema for bootstrap
+        sqlSchemaBootstrapper.addStatementFromResource(dataSourceName, "participant-schema.sql");
+    }
+    
+    @Provider
+    public ParticipantStore createSqlParticipantStore(ServiceExtensionContext context) {
+        if (participantStore != null) {
+            return participantStore;
+        }
+        
+        monitor.debug("SQL Participant Store: Creating store instance...");
+        
+        participantStore = new SqlParticipantStore(
+                dataSourceRegistry, 
+                dataSourceName, 
+                transactionContext,
+                typeManager.getMapper(),
+                getStatementImpl(),
+                queryExecutor,
+                monitor
+        );
+        
+        monitor.info("SQL Participant Store: Store created successfully");
+        return participantStore;
+    }
+    
+    private ParticipantStatements getStatementImpl() {
+        return statements != null ? statements : new PostgresDialectStatements();
+    }
+}
