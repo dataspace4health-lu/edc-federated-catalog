@@ -30,6 +30,7 @@ dependencies {
     implementation(libs.edc.dsp)
     implementation(libs.edc.iam.mock)
     implementation(libs.edc.api.observability)
+    implementation(libs.edc.participant.context.single.core)
     
     // SQL infrastructure
     implementation(libs.edc.sql.core)

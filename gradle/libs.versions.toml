@@ -3,7 +3,7 @@ format.version = "1.1"
 
 [versions]
 awaitility = "4.2.2"
-edc = "0.13.0"
+edc = "0.15.1"
 okhttp-mockwebserver = "5.1.0"
 restAssured = "5.5.5"
 rsApi = "4.0.0"
@@ -58,6 +58,7 @@ edc-policy-spi = { module = "org.eclipse.edc:policy-spi", version.ref = "edc" }
 edc-policy-request-context-spi = { module = "org.eclipse.edc:policy-request-context-spi", version.ref = "edc" }
 edc-policy-engine-spi = { module = "org.eclipse.edc:policy-engine-spi", version.ref = "edc" }
 edc-participant-spi = { module = "org.eclipse.edc:participant-spi", version.ref = "edc" }
+edc-participant-context-single-core = { module = "org.eclipse.edc:participant-context-single-core", version.ref = "edc" }
 edc-contract-spi = { module = "org.eclipse.edc:contract-spi", version.ref = "edc" }
 edc-transaction-spi = { module = "org.eclipse.edc:transaction-spi", version.ref = "edc" }
 edc-transactions-datasource-spi = { module = "org.eclipse.edc:transaction-datasource-spi", version.ref = "edc" }
