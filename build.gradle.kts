@@ -41,6 +41,8 @@ dependencies {
     implementation(libs.edc.sql.bootstrapper)
     implementation(libs.postgres)
 
+    implementation(libs.edc.vault.hashicorp)
+
     implementation(project(":extensions:catalog:directory"))
     implementation(project(":extensions:catalog:participant"))
     implementation(project(":extensions:common:http:client"))
