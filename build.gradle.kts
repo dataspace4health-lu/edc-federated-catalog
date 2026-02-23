@@ -28,9 +28,36 @@ dependencies {
         exclude(group = "org.eclipse.edc", module = "jersey-core")
     }
     implementation(libs.edc.dsp)
-    implementation(libs.edc.iam.mock)
+    implementation(libs.edc.decentralized.claims.core)
     implementation(libs.edc.api.observability)
     implementation(libs.edc.participant.context.single.core)
+    
+    // // JSON-LD support for DSP protocol
+    // implementation(libs.edc.json.ld.lib)
+    
+    // // DID and OAuth2 support for identity management
+    // implementation(libs.edc.did.core)
+    // implementation(libs.edc.did.web)
+    // implementation(libs.edc.oauth2.client)
+    // implementation(libs.edc.spi.token)
+    // implementation(libs.edc.spi.jwt)
+
+    // //IH module dependencies
+    // implementation(libs.edc.core.spi)
+    // implementation(libs.edc.token.core)
+
+    // Identity and DID modules (required by DSP protocol adapters)
+    implementation(libs.edc.decentralized.claims.core)
+    implementation(libs.edc.json.ld.lib)
+    implementation(libs.edc.did.core)
+    implementation(libs.edc.oauth2.client)
+    
+    // Federated Catalog Core modules with protocol adapters for DSP crawling
+    implementation(libs.edc.fc.core)
+    implementation(libs.edc.fc.core2025)  // DSP 2025/1 protocol adapter
+    implementation(libs.edc.fc.core08)     // DSP 08 protocol adapter
+    implementation(libs.edc.fc.api)
+    
     
     // SQL infrastructure
     implementation(libs.edc.sql.core)
