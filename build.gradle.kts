@@ -31,6 +31,22 @@ dependencies {
     implementation(libs.edc.decentralized.claims.core)
     implementation(libs.edc.api.observability)
     implementation(libs.edc.participant.context.single.core)
+
+    // Filesystem configuration support for loading properties file
+    implementation(libs.edc.configuration.filesystem)
+
+    // Identity and DID modules (required by DSP protocol adapters)
+    implementation(libs.edc.decentralized.claims.core)
+    implementation(libs.edc.json.ld.lib)
+    implementation(libs.edc.did.core)
+    implementation(libs.edc.oauth2.client)
+    
+    // Federated Catalog Core modules with protocol adapters for DSP crawling
+    implementation(libs.edc.fc.core)
+    implementation(libs.edc.fc.core2025)  // DSP 2025/1 protocol adapter
+    implementation(libs.edc.fc.core08)     // DSP 08 protocol adapter
+    implementation(libs.edc.fc.api)
+    
     
     // // JSON-LD support for DSP protocol
     // implementation(libs.edc.json.ld.lib)
@@ -75,6 +91,7 @@ dependencies {
     implementation(project(":extensions:common:http:client"))
     implementation(project(":extensions:common:http:jersey-core"))
     implementation(project(":extensions:store:sql:participant-sql"))
+    implementation(project(":extensions:scope"))
 
     testReportAggregation(project(":extensions:catalog:directory"))
     testReportAggregation(project(":extensions:catalog:participant"))
