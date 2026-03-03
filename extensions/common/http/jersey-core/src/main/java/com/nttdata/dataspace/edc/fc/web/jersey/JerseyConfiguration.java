@@ -16,6 +16,8 @@ package com.nttdata.dataspace.edc.fc.web.jersey;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 
+import java.util.Collections;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -28,6 +30,12 @@ public class JerseyConfiguration {
     private String allowedMethods;
     private boolean corsEnabled;
 
+    /**
+     * Participant-derived origins, refreshed on every participant create/update/delete.
+     * Volatile so that visibility across threads is guaranteed without synchronization.
+     */
+    private volatile Set<String> participantOrigins = Collections.emptySet();
+
     private JerseyConfiguration() {
     }
 
@@ -37,21 +45,38 @@ public class JerseyConfiguration {
 
     public String getAllowedOrigin(ContainerRequestContext requestContext) {
         String origin = requestContext.getHeaderString("Origin");
-        if (origin == null || origin.isEmpty() || allowedOrigins == null) {
+        if (origin == null || origin.isEmpty()) {
             return null;
         }
-        if (allowedOrigins.length() == 1 && allowedOrigins.contains("*")) {
+        // Wildcard — allow every origin.
+        if (allowedOrigins != null && allowedOrigins.trim().equals("*")) {
             return "*";
         }
-        
-        var pattern = Pattern.quote(origin.trim());
-        // (^|,\s*) <item> (\s*,|$)  — match item boundaries in CSV
-        Pattern p = Pattern.compile("(^\\s*|,\\s*)" + pattern + "(\\s*,|\\s*$)");
-        if (p.matcher(allowedOrigins).find()) {
+        // Check static origins from configuration.
+        if (allowedOrigins != null) {
+            var pattern = Pattern.quote(origin.trim());
+            // (^|,\s*) <item> (\s*,|$)  — match item boundaries in CSV
+            Pattern p = Pattern.compile("(^\\s*|,\\s*)" + pattern + "(\\s*,|\\s*$)");
+            if (p.matcher(allowedOrigins).find()) {
+                return origin;
+            }
+        }
+        // Check participant-derived origins (kept up-to-date by ParticipantRegistryApiController).
+        if (participantOrigins.contains(origin.trim().toLowerCase())) {
             return origin;
         }
-        
         return null;
+    }
+
+    /**
+     * Replaces the current set of participant-derived CORS origins.
+     * Called by the participant API controller after every create/update/delete so
+     * that CORS allowlist stays consistent with the participant registry.
+     *
+     * @param origins the freshly loaded set of participant origins
+     */
+    public void setParticipantOrigins(Set<String> origins) {
+        this.participantOrigins = (origins != null) ? Set.copyOf(origins) : Collections.emptySet();
     }
 
     void setAllowedOrigin(String allowedOrigins) {

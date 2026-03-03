@@ -2,6 +2,7 @@ package com.nttdata.dataspace.edc.fc.participant.api;
 
 import com.nttdata.dataspace.edc.fc.store.sql.Participant;
 import com.nttdata.dataspace.edc.fc.store.sql.ParticipantStore;
+import com.nttdata.dataspace.edc.fc.web.jersey.JerseyConfiguration;
 import org.eclipse.edc.spi.monitor.Monitor;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,13 +20,18 @@ class ParticipantRegistryApiControllerTest {
 
     private ParticipantStore store;
     private Monitor monitor;
+    private JerseyConfiguration jerseyConfiguration;
     private ParticipantRegistryApiController controller;
 
     @BeforeEach
     void setUp() {
         store = mock(ParticipantStore.class);
         monitor = mock(Monitor.class);
-        controller = new ParticipantRegistryApiController(store, monitor);
+        jerseyConfiguration = mock(JerseyConfiguration.class);
+        // Stub findAll() so the CORS refresh called after mutations returns an empty stream
+        // instead of throwing a NullPointerException.
+        when(store.findAll()).thenReturn(java.util.stream.Stream.empty());
+        controller = new ParticipantRegistryApiController(store, monitor, jerseyConfiguration);
     }
 
     @Test

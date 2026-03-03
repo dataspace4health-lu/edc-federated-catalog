@@ -20,6 +20,7 @@ import org.eclipse.edc.web.spi.validation.InterceptorFunctionRegistry;
 @Provides(WebService.class)
 public class JerseyExtension implements ServiceExtension {
     private JerseyRestService jerseyRestService;
+    private JerseyConfiguration jerseyConfiguration;
 
     @Setting
     public static final String CORS_CONFIG_ORIGINS_SETTING = "edc.web.rest.cors.origins";
@@ -48,14 +49,14 @@ public class JerseyExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         monitor.info("Initializing Jersey extension.");
 
-        var configuration = JerseyConfiguration.Builder.newInstance()
+        jerseyConfiguration = JerseyConfiguration.Builder.newInstance()
             .allowedHeaders(context.getSetting(CORS_CONFIG_HEADERS_SETTING, "origin, content-type, accept, authorization"))
             .allowedOrigins(context.getSetting(CORS_CONFIG_ORIGINS_SETTING, "*"))
             .allowedMethods(context.getSetting(CORS_CONFIG_METHODS_SETTING, "GET, POST, DELETE, PUT, OPTIONS"))
             .corsEnabled(context.getSetting(CORS_CONFIG_ENABLED_SETTING, false))
             .build();
 
-        jerseyRestService = new JerseyRestService(webServer, typeManager, configuration, monitor, participantStore);
+        jerseyRestService = new JerseyRestService(webServer, typeManager, jerseyConfiguration, monitor, participantStore);
 
         provider = new ResourceInterceptorProvider();
         jerseyRestService.registerInstance(() -> new ResourceInterceptorBinder(provider));
@@ -71,5 +72,15 @@ public class JerseyExtension implements ServiceExtension {
     @Provider
     public InterceptorFunctionRegistry createInterceptorFunctionRegistry() {
         return provider;
+    }
+
+    /**
+     * Exposes the {@link JerseyConfiguration} as an EDC service so other extensions
+     * (e.g., the participant API) can call {@link JerseyConfiguration#setParticipantOrigins}
+     * to keep the CORS allowlist in sync with the participant registry.
+     */
+    @Provider
+    public JerseyConfiguration jerseyConfiguration() {
+        return jerseyConfiguration;
     }
 }

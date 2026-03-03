@@ -15,6 +15,7 @@
 package com.nttdata.dataspace.edc.fc.participant.api;
 
 import com.nttdata.dataspace.edc.fc.store.sql.ParticipantStore;
+import com.nttdata.dataspace.edc.fc.web.jersey.JerseyConfiguration;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -40,6 +41,9 @@ public class ParticipantApiExtension implements ServiceExtension {
     
     @Inject
     private ParticipantStore participantStore;
+
+    @Inject
+    private JerseyConfiguration jerseyConfiguration;
     
     @Override
     public String name() {
@@ -51,7 +55,7 @@ public class ParticipantApiExtension implements ServiceExtension {
         monitor.info("Participant Store API: Initializing...");
         
         // Create and register the API controller
-        var apiController = new ParticipantRegistryApiController(participantStore, monitor);
+        var apiController = new ParticipantRegistryApiController(participantStore, monitor, jerseyConfiguration);
         webService.registerResource("catalog", apiController);
         
         // Get the catalog path from configuration

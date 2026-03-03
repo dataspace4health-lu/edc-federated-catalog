@@ -78,7 +78,6 @@ class JerseyRestServiceTest {
     @Test
     void start_shouldMergeOriginsAndRegisterServlets() {
         // Arrange
-        when(configuration.getAllowedOrigins()).thenReturn("https://a.com, https://b.com");
         when(configuration.isCorsEnabled()).thenReturn(false);
         when(participantStore.findAll()).thenReturn(java.util.stream.Stream.empty());
         service.registerResource("default", new Object());
@@ -87,15 +86,15 @@ class JerseyRestServiceTest {
         // Act
         service.start();
 
-        // Assert
-        verify(configuration).setAllowedOrigin("https://a.com,https://b.com");
+        // Assert: participant origins are applied to configuration and servlets registered
+        verify(configuration).setParticipantOrigins(argThat(Set::isEmpty));
         verify(webServer).registerServlet(eq("default"), any(ServletContainer.class));
         verify(webServer).registerServlet(eq("api"), any(ServletContainer.class));
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void start_shouldIncludeParticipantOrigins() {
-        when(configuration.getAllowedOrigins()).thenReturn("https://a.com");
         when(configuration.isCorsEnabled()).thenReturn(false);
 
         // Simulate participant origins by returning Participants with endpoints
@@ -103,14 +102,15 @@ class JerseyRestServiceTest {
         Participant p2 = Participant.builder().id("p2").endpoint("https://c.com").build();
         when(participantStore.findAll()).thenReturn(java.util.stream.Stream.of(p1, p2));
 
-        // Register a resource
         service.registerResource(new Object());
 
         // Act
         service.start();
 
-        // Assert
-        verify(configuration).setAllowedOrigin("https://a.com,https://b.com,https://c.com");
+        // Assert: the participant-derived origins are passed to the configuration
+        var captor = org.mockito.ArgumentCaptor.forClass(Set.class);
+        verify(configuration).setParticipantOrigins(captor.capture());
+        assertThat(captor.getValue()).contains("https://b.com", "https://c.com");
         verify(webServer).registerServlet(eq("default"), any(ServletContainer.class));
     }
 
@@ -144,7 +144,8 @@ class JerseyRestServiceTest {
 
     @Test
     void start_shouldThrowEdcExceptionOnError() {
-        when(configuration.getAllowedOrigins()).thenThrow(new RuntimeException("fail"));
+        when(participantStore.findAll()).thenReturn(java.util.stream.Stream.empty());
+        doThrow(new RuntimeException("fail")).when(webServer).registerServlet(anyString(), any());
 
         service.registerResource(new Object());
         EdcException ex = assertThrows(EdcException.class, service::start);

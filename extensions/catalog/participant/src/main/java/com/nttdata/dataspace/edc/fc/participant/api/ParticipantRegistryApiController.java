@@ -26,6 +26,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import com.nttdata.dataspace.edc.fc.store.sql.Participant;
 import com.nttdata.dataspace.edc.fc.store.sql.ParticipantStore;
+import com.nttdata.dataspace.edc.fc.web.jersey.JerseyConfiguration;
+import com.nttdata.dataspace.edc.fc.web.jersey.OriginsLoader;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.util.List;
@@ -41,10 +43,12 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
     
     private final ParticipantStore store;
     private final Monitor monitor;
+    private final JerseyConfiguration jerseyConfiguration;
     
-    public ParticipantRegistryApiController(ParticipantStore store, Monitor monitor) {
+    public ParticipantRegistryApiController(ParticipantStore store, Monitor monitor, JerseyConfiguration jerseyConfiguration) {
         this.store = store;
         this.monitor = monitor;
+        this.jerseyConfiguration = jerseyConfiguration;
     }
     
     @Override
@@ -73,6 +77,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         // Save to store
         var result = store.save(participant);
         if (result.succeeded()) {
+            refreshCorsOrigins();
             monitor.info("Successfully created participant: " + dto.getId());
             return Response.status(Response.Status.CREATED)
                     .entity(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.success(
@@ -174,6 +179,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         
         var result = store.update(updated);
         if (result.succeeded()) {
+            refreshCorsOrigins();
             monitor.info("Successfully updated participant: " + id);
             return Response.ok(com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.success(
                     toDto(updated),
@@ -210,6 +216,7 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         
         var result = store.delete(id);
         if (result.succeeded()) {
+            refreshCorsOrigins();
             monitor.info("Successfully deleted participant: " + id);
             return Response.noContent().build();
         } else {
@@ -312,5 +319,20 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
                 .dspUrl(participant.getEndpoint())
                 .supportedProtocols(participant.getSupportedProtocols())
                 .build();
+    }
+
+    /**
+     * Reloads all participant origins from the store and updates the CORS allowlist
+     * in {@link JerseyConfiguration}. Called after every successful create/update/delete
+     * so that CORS stays consistent with the participant registry without requiring a restart.
+     */
+    private void refreshCorsOrigins() {
+        try {
+            var origins = new OriginsLoader(monitor, store).loadOrigins();
+            jerseyConfiguration.setParticipantOrigins(origins);
+            monitor.debug("CORS origins refreshed after participant change (" + origins.size() + " origin(s))");
+        } catch (Exception e) {
+            monitor.warning("Failed to refresh CORS origins after participant change: " + e.getMessage());
+        }
     }
 }

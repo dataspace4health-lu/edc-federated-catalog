@@ -33,13 +33,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.toSet;
@@ -93,26 +89,7 @@ public class JerseyRestService implements WebService {
 
     public void start() {
         try {
-            var allowedOrigins = configuration.getAllowedOrigins();
-            
-            var loader = new OriginsLoader(monitor, participantStore);
-            Set<String> participantOrigins = loader.loadOrigins();
-
-            Set<String> mergedOrigins = new LinkedHashSet<>();
-            Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty() && !s.equals("*"))
-                .map(String::toLowerCase)
-                .forEach(mergedOrigins::add);
-
-            participantOrigins.stream()
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(String::toLowerCase)
-                .forEach(mergedOrigins::add);
-
-            configuration.setAllowedOrigin(String.join(",", mergedOrigins));
+            configuration.setParticipantOrigins(new OriginsLoader(monitor, participantStore).loadOrigins());
             
             controllers.forEach(this::registerContext);
         } catch (Exception e) {

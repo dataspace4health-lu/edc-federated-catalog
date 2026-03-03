@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * - https://example.com/api → https://example.com (default port 443 omitted)
  * - http://localhost:9090/dsp → http://localhost:9090
  */
-class OriginsLoader {
+public class OriginsLoader {
 
     private final Monitor monitor;
     private final ParticipantStore participantStore;
@@ -32,7 +32,7 @@ class OriginsLoader {
      * @param monitor the monitor for logging
      * @param participantStore participant db store
      */
-    OriginsLoader(@NotNull Monitor monitor, @NotNull ParticipantStore participantStore) {
+    public OriginsLoader(@NotNull Monitor monitor, @NotNull ParticipantStore participantStore) {
         this.monitor = monitor;
         this.participantStore = participantStore;
     }
@@ -43,7 +43,7 @@ class OriginsLoader {
      * @return Set of participant origins extracted from the database, or empty set if loading fails
      */
     @NotNull
-    Set<String> loadOrigins() {
+    public Set<String> loadOrigins() {
         try {
             Set<Participant> participants =
                 participantStore.findAll().collect(Collectors.toSet());

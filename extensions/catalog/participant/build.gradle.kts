@@ -10,6 +10,8 @@ dependencies {
     
     // Add dependency to participant store for database-backed loading
     implementation(project(":extensions:store:sql:participant-sql"))
+    // Jersey configuration is needed to refresh CORS origins on participant changes
+    implementation(project(":extensions:common:http:jersey-core"))
 
     // Test dependencies
     testImplementation(libs.junit.jupiter.api)
