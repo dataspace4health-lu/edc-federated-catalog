@@ -18,6 +18,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 /**
@@ -32,9 +33,9 @@ public class JerseyConfiguration {
 
     /**
      * Participant-derived origins, refreshed on every participant create/update/delete.
-     * Volatile so that visibility across threads is guaranteed without synchronization.
+     * AtomicReference ensures that both reads and writes to this field are thread-safe.
      */
-    private volatile Set<String> participantOrigins = Collections.emptySet();
+    private final AtomicReference<Set<String>> participantOrigins = new AtomicReference<>(Collections.emptySet());
 
     private JerseyConfiguration() {
     }
@@ -62,7 +63,7 @@ public class JerseyConfiguration {
             }
         }
         // Check participant-derived origins (kept up-to-date by ParticipantRegistryApiController).
-        if (participantOrigins.contains(origin.trim().toLowerCase())) {
+        if (participantOrigins.get().contains(origin.trim().toLowerCase())) {
             return origin;
         }
         return null;
@@ -76,7 +77,7 @@ public class JerseyConfiguration {
      * @param origins the freshly loaded set of participant origins
      */
     public void setParticipantOrigins(Set<String> origins) {
-        this.participantOrigins = (origins != null) ? Set.copyOf(origins) : Collections.emptySet();
+        this.participantOrigins.set((origins != null) ? Set.copyOf(origins) : Collections.emptySet());
     }
 
     void setAllowedOrigin(String allowedOrigins) {
