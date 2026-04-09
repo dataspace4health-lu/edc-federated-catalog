@@ -22,11 +22,17 @@ allprojects {
     // in the affected range 2.19.0-2.21.0; patched version is 2.21.1.
     // NOTE: only jackson-core received the 2.21.1 security patch — jackson-annotations and
     // jackson-databind have no 2.21.1 release and must remain at their BOM-resolved versions.
+    // Pin Eclipse Jetty to 12.1.6 to fix CVE-2026-1605 (HIGH) — GzipHandler JDK Inflater
+    // resource leak when handling compressed requests with uncompressed responses. Affects 12.0.0-12.0.31
+    // and 12.1.0-12.1.5; fixed in 12.0.32 and 12.1.6.
     configurations.configureEach {
         resolutionStrategy.eachDependency {
             if (requested.group == "com.fasterxml.jackson.core" && requested.name == "jackson-core") {
                 useVersion("2.21.1")
                 because("GHSA-72hv-8253-57qq: pin jackson-core to 2.21.1 (patched)")
+            } else if (requested.group == "org.eclipse.jetty" && requested.name == "jetty-server") {
+                useVersion("12.1.6")
+                because("CVE-2026-1605: pin Jetty to 12.1.6 to fix GzipHandler Inflater resource leak (HIGH)")
             }
         }
     }
