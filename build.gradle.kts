@@ -22,17 +22,20 @@ allprojects {
     // in the affected range 2.19.0-2.21.0; patched version is 2.21.1.
     // NOTE: only jackson-core received the 2.21.1 security patch — jackson-annotations and
     // jackson-databind have no 2.21.1 release and must remain at their BOM-resolved versions.
-    // Pin Eclipse Jetty to 12.1.6 to fix CVE-2026-1605 (HIGH) — GzipHandler JDK Inflater
-    // resource leak when handling compressed requests with uncompressed responses. Affects 12.0.0-12.0.31
-    // and 12.1.0-12.1.5; fixed in 12.0.32 and 12.1.6.
+    // Pin Eclipse Jetty (all modules) to 12.1.7 to fix:
+    //  - CVE-2026-1605 (HIGH) — GzipHandler JDK Inflater resource leak when handling compressed
+    //    requests with uncompressed responses. Affects 12.0.0-12.0.31 and 12.1.0-12.1.5;
+    //    fixed in 12.0.32 and 12.1.6.
+    //  - CVE-2026-2332 (HIGH) — HTTP/1.1 parser vulnerable to request smuggling via chunk
+    //    extensions ("funky chunks"). Affects jetty-http 12.1.6; fixed in 12.1.7 and 12.0.33.
     configurations.configureEach {
         resolutionStrategy.eachDependency {
             if (requested.group == "com.fasterxml.jackson.core" && requested.name == "jackson-core") {
                 useVersion("2.21.1")
                 because("GHSA-72hv-8253-57qq: pin jackson-core to 2.21.1 (patched)")
-            } else if (requested.group == "org.eclipse.jetty" && requested.name == "jetty-server") {
-                useVersion("12.1.6")
-                because("CVE-2026-1605: pin Jetty to 12.1.6 to fix GzipHandler Inflater resource leak (HIGH)")
+            } else if (requested.group == "org.eclipse.jetty") {
+                useVersion("12.1.7")
+                because("CVE-2026-2332: pin all Jetty modules to 12.1.7 to fix HTTP/1.1 request smuggling via chunk extensions (HIGH)")
             }
         }
     }
@@ -188,7 +191,7 @@ subprojects {
 // 1) Register a single aggregation task
 val allTests by tasks.register<TestReport>("allTests") {
     destinationDirectory.set(layout.buildDirectory.dir("reports/junit/html"))
-    // Collect results from all subprojects’ "test" tasks
+    // Collect results from all subprojects' "test" tasks
     testResults.from(subprojects.map { it.tasks.named("test") })
 }
 
@@ -197,6 +200,3 @@ val allTests by tasks.register<TestReport>("allTests") {
 tasks.named("test") {
     finalizedBy(allTests)
 }
-
-
-

@@ -30,7 +30,11 @@ ENV LOG_LEVEL=info
 ARG APP_USER=appuser  
 ARG APP_UID=10100
 
-# Install helper tools and create user
+# Install helper tools and create user.
+# Also remove the pebble process-manager binary (Canonical/Ubuntu package, not needed for this
+# Java application) to eliminate CVE-2026-33811, CVE-2026-33814, CVE-2026-39820, CVE-2026-39823,
+# CVE-2026-39825, CVE-2026-39836, CVE-2026-42499, CVE-2026-42504 (Go stdlib HIGH CVEs compiled
+# into the pebble binary shipped in the base image at /usr/bin/pebble).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl jq \
     && apt-get upgrade -y \
@@ -43,6 +47,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gpgsm \
         gpgv \
         keyboxd \
+    && rm -f /usr/bin/pebble \
     && rm -rf /var/lib/apt/lists/* \
     && addgroup --system "$APP_USER" \
     && adduser \
