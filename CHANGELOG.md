@@ -14,6 +14,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.2.0] — API Behaviour Fix & Security Hardening
+
+### Changed
+- **`DELETE /participants/{id}` now returns `200 OK`** instead of `204 No Content`. The Traefik + Jetty combination on the deployment cluster silently drops empty-body (204) responses before they reach the browser, causing the HTTP request to hang indefinitely as "pending". The endpoint now returns an `ApiResponse` JSON body to ensure the response is flushed through the proxy. Clients should treat both `200` and `204` as success.
+- **`refreshCorsOrigins()` is now asynchronous** — executed via `CompletableFuture.runAsync()` instead of synchronously on the request thread. Synchronous `JerseyConfiguration.setParticipantOrigins()` calls were blocking the Jetty response flush, causing the same pending-response symptom under Traefik. Async execution allows the HTTP response to complete immediately; the CORS origin list is refreshed a few milliseconds later in the JVM common fork-join pool.
+
+### Fixed
+- **CVE-2026-54512 (HIGH)** — `jackson-databind` pinned to 2.21.4. The `PolymorphicTypeValidator` (PTV) validated only the raw container class name when a type ID contained generic parameters (e.g., `ArrayList<EvilClass>`). Nested type arguments bypassed the PTV allow-list entirely. Affected versions: 2.10.0–2.21.3. Fixed in 2.18.8, **2.21.4**, and 3.1.4.
+- **CVE-2026-54513 (HIGH)** — `jackson-databind` pinned to 2.21.4. `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` allowlisted any array type based solely on `clazz.isArray()` without validating the array's component type, allowing `EvilType[]` to bypass an explicit allow-list. Affected versions: 2.10.0–2.21.3. Fixed in 2.18.8, **2.21.4**, and 3.1.4.
+
+---
+
 ## [1.1.0] — Security Hardening & Dynamic CORS
 
 ### Added

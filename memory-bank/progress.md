@@ -20,6 +20,7 @@
 
 ### Security
 - ✅ jackson-core pinned to 2.21.1 (GHSA-72hv-8253-57qq)
+- ✅ jackson-databind pinned to 2.21.4 (CVE-2026-54512, CVE-2026-54513 — polymorphic type validator bypasses, both HIGH)
 - ✅ Jetty pinned to 12.1.7 (CVE-2026-1605, CVE-2026-2332)
 - ✅ `pebble` binary removed from Docker base image (8 Go stdlib CVEs)
 - ✅ APT packages upgraded in Docker build
@@ -54,11 +55,13 @@
 
 1. **No pagination on `GET /participants/`** — All participants are returned in a single response. This is acceptable for small dataspaces (< a few hundred participants) but will require pagination for larger deployments.
 
-2. **CORS refresh on failure is silent** — If `refreshCorsOrigins()` throws an exception, the error is logged as a warning but the operation is not rolled back. The participant record change succeeds but CORS origins may be stale until the next successful mutation or restart.
+2. **CORS refresh on failure is silent** — If `refreshCorsOrigins()` throws an exception inside the async thread, the error is logged as a warning but the operation is not rolled back. The participant record change succeeds but CORS origins may be stale until the next successful mutation or restart.
 
 3. **`jersey-core` module is custom, not upstream** — The `extensions/common/http/jersey-core` module embeds a custom CORS filter and Jersey configuration. This means EDC upgrades must be validated to ensure jersey API compatibility is maintained.
 
 4. **SQL bootstrapper is startup-only** — Schema migrations beyond the initial creation must be handled manually. `edc:sql-bootstrapper` only runs `CREATE TABLE IF NOT EXISTS` — it does not manage schema evolution.
+
+5. **`DELETE` returns `200 OK` instead of `204 No Content`** — The Traefik + Jetty environment silently drops empty-body (204) responses before they reach the browser. The `deleteParticipant` endpoint intentionally returns `200 OK` with an `ApiResponse` body as a workaround. This deviates from REST best practices but is required for the current infrastructure.
 
 ## Evolution of Project Decisions
 
@@ -67,5 +70,7 @@
 | Participant discovery | Static `participants.json` file | `ParticipantStore` + PostgreSQL | Runtime management without restart |
 | Participant API | None (file-only) | REST CRUD API + Swagger UI | Operator-friendly management |
 | CORS management | Static config | Dynamic refresh from participant store | Keep CORS consistent with live participant list |
+| CORS refresh execution | Synchronous (on request thread) | Async (`CompletableFuture.runAsync()`) | Synchronous Jersey config update blocked HTTP response flush in Traefik |
+| DELETE response | `204 No Content` (no body) | `200 OK` + `ApiResponse` JSON body | Traefik/Jetty silently drops empty-body 204 responses; browser sees indefinitely-pending request |
 | Scope injection | All three policy contexts (catalog, negotiation, transfer) | Catalog only (`RequestCatalogPolicyContext`) | Federator only sends catalog requests |
 | Container security | Default base image user | Non-root `appuser` + pebble removal | Eliminate privilege escalation risk and reduce CVE surface |

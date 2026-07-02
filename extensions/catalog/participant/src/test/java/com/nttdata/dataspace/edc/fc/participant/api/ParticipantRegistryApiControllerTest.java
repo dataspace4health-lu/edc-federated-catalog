@@ -186,7 +186,7 @@ class ParticipantRegistryApiControllerTest {
         when(store.delete("p1")).thenReturn(org.eclipse.edc.spi.result.StoreResult.success(existing));
 
         Response response = controller.deleteParticipant("p1");
-        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     }
 
     @Test

@@ -31,6 +31,7 @@ import com.nttdata.dataspace.edc.fc.web.jersey.OriginsLoader;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * REST API Controller for Participant Registry operations.
@@ -218,7 +219,13 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
         if (result.succeeded()) {
             refreshCorsOrigins();
             monitor.info("Successfully deleted participant: " + id);
-            return Response.noContent().build();
+            // Return 200 with a body instead of 204 No Content.
+            // Traefik/Jetty can silently drop empty-body responses causing the
+            // browser to see an indefinitely-pending request.
+            return Response.ok(
+                    com.nttdata.dataspace.edc.fc.participant.api.ApiResponse.success(
+                            null, "Participant deleted successfully"))
+                    .build();
         } else {
             monitor.severe("Failed to delete participant: " + result.getFailureDetail());
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -323,16 +330,18 @@ public class ParticipantRegistryApiController implements ParticipantRegistryApi 
 
     /**
      * Reloads all participant origins from the store and updates the CORS allowlist
-     * in {@link JerseyConfiguration}. Called after every successful create/update/delete
-     * so that CORS stays consistent with the participant registry without requiring a restart.
+     * in {@link JerseyConfiguration}. Runs asynchronously so the HTTP response is
+     * sent immediately without being blocked by the Jersey configuration update.
      */
     private void refreshCorsOrigins() {
-        try {
-            var origins = new OriginsLoader(monitor, store).loadOrigins();
-            jerseyConfiguration.setParticipantOrigins(origins);
-            monitor.debug("CORS origins refreshed after participant change (" + origins.size() + " origin(s))");
-        } catch (Exception e) {
-            monitor.warning("Failed to refresh CORS origins after participant change: " + e.getMessage());
-        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                var origins = new OriginsLoader(monitor, store).loadOrigins();
+                jerseyConfiguration.setParticipantOrigins(origins);
+                monitor.debug("CORS origins refreshed after participant change (" + origins.size() + " origin(s))");
+            } catch (Exception e) {
+                monitor.warning("Failed to refresh CORS origins after participant change: " + e.getMessage());
+            }
+        });
     }
 }

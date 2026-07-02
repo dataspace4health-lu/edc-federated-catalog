@@ -22,6 +22,9 @@ The current focus is on **documentation** — generating the memory bank and sta
 - **jackson-core pinned to 2.21.1**: Fixes GHSA-72hv-8253-57qq (number length constraint bypass in async parser).
 - **`ScopeExtension` registered only for `RequestCatalogPolicyContext`**: Earlier versions also registered for contract negotiation and transfer; this was narrowed to catalog-only scope injection.
 - **Dynamic CORS**: `refreshCorsOrigins()` introduced in `ParticipantRegistryApiController` to keep the CORS allowlist consistent with the participant registry without requiring a restart.
+- **`refreshCorsOrigins()` made asynchronous**: Changed from synchronous call to `CompletableFuture.runAsync()` to prevent the Jersey/Jetty server configuration update from blocking the current request thread and causing the HTTP response to be silently dropped by the Traefik proxy.
+- **`DELETE /participants/{id}` now returns `200 OK`**: Changed from `204 No Content` to `200 OK` with an `ApiResponse` JSON body. The Traefik + Jetty combination on the deployment cluster silently drops empty-body responses (204), causing the browser to see an indefinitely-pending request. Returning a JSON body ensures the response is flushed through the proxy.
+- **`jackson-databind` pinned to 2.21.4**: Fixes CVE-2026-54512 and CVE-2026-54513 (both HIGH). CVE-2026-54512 allows the PolymorphicTypeValidator (PTV) allow-list to be bypassed via generic type parameters in the type ID (e.g. `ArrayList<EvilClass>` passes the PTV check for `ArrayList`). CVE-2026-54513 allows `allowIfSubTypeIsArray()` to admit `EvilType[]` because the array component type is never validated. Affects 2.10.0–2.21.3; fixed in 2.21.4.
 
 ## Active Decisions and Considerations
 

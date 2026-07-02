@@ -17,11 +17,18 @@ allprojects {
         }
     }
 
-    // Pin jackson-core (only) to 2.21.1 to fix GHSA-72hv-8253-57qq (Number Length Constraint
-    // Bypass in Async Parser, published 2026-02-26). EDC BOM 0.15.1 resolves 2.20.1 which is
-    // in the affected range 2.19.0-2.21.0; patched version is 2.21.1.
-    // NOTE: only jackson-core received the 2.21.1 security patch — jackson-annotations and
-    // jackson-databind have no 2.21.1 release and must remain at their BOM-resolved versions.
+    // Pin jackson-core to 2.21.1 to fix GHSA-72hv-8253-57qq (Number Length Constraint Bypass
+    // in Async Parser, published 2026-02-26). EDC BOM 0.15.1 resolves 2.20.1 which is in the
+    // affected range 2.19.0-2.21.0; patched version is 2.21.1.
+    // Pin jackson-databind to 2.21.4 to fix two HIGH-severity polymorphic deserialisation CVEs:
+    //  - CVE-2026-54512 (HIGH) — PolymorphicTypeValidator (PTV) validates only the raw container
+    //    class name when a type ID contains generic parameters (e.g. "ArrayList<EvilClass>").
+    //    The nested type argument bypasses the PTV allow-list entirely. Affects 2.10.0-2.21.3;
+    //    fixed in 2.18.8, 2.21.4, and 3.1.4.
+    //  - CVE-2026-54513 (HIGH) — BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()
+    //    allowlists any array type without validating the array component type, allowing
+    //    EvilType[] to bypass an explicit allow-list. Affects 2.10.0-2.21.3; fixed in 2.18.8,
+    //    2.21.4, and 3.1.4.
     // Pin Eclipse Jetty (all modules) to 12.1.7 to fix:
     //  - CVE-2026-1605 (HIGH) — GzipHandler JDK Inflater resource leak when handling compressed
     //    requests with uncompressed responses. Affects 12.0.0-12.0.31 and 12.1.0-12.1.5;
@@ -33,6 +40,9 @@ allprojects {
             if (requested.group == "com.fasterxml.jackson.core" && requested.name == "jackson-core") {
                 useVersion("2.21.1")
                 because("GHSA-72hv-8253-57qq: pin jackson-core to 2.21.1 (patched)")
+            } else if (requested.group == "com.fasterxml.jackson.core" && requested.name == "jackson-databind") {
+                useVersion("2.21.4")
+                because("CVE-2026-54512 + CVE-2026-54513: pin jackson-databind to 2.21.4 to fix polymorphic type validator bypasses (HIGH)")
             } else if (requested.group == "org.eclipse.jetty") {
                 useVersion("12.1.7")
                 because("CVE-2026-2332: pin all Jetty modules to 12.1.7 to fix HTTP/1.1 request smuggling via chunk extensions (HIGH)")

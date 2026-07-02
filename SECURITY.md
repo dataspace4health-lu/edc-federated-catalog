@@ -4,8 +4,9 @@
 
 | Version | Supported |
 |---|---|
-| 1.1.x (current) | ✅ Active |
-| 1.0.x | ⚠️ Security fixes only |
+| 1.2.x (current) | ✅ Active |
+| 1.1.x | ⚠️ Security fixes only |
+| 1.0.x | ❌ Not supported |
 | < 1.0 | ❌ Not supported |
 
 ---
@@ -50,6 +51,13 @@ If you discover a security vulnerability in this repository, **do not open a pub
 ---
 
 ## Known Resolved CVEs
+
+### v1.2.0
+
+| CVE / Advisory | Severity | Component | Fix |
+|---|---|---|---|
+| CVE-2026-54512 | HIGH | jackson-databind 2.10.0–2.21.3 | PolymorphicTypeValidator allow-list bypass via generic type parameters — pinned jackson-databind to 2.21.4 |
+| CVE-2026-54513 | HIGH | jackson-databind 2.10.0–2.21.3 | `allowIfSubTypeIsArray()` does not validate array component type — pinned jackson-databind to 2.21.4 |
 
 ### v1.1.0
 
