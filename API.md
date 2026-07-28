@@ -225,7 +225,7 @@ Removes a participant from the registry.
 
 | Status | Condition | Body |
 |---|---|---|
-| `204 No Content` | Participant deleted | — |
+| `200 OK` | Participant deleted | — |
 | `400 Bad Request` | Invalid (blank) ID | `ApiResponse` with `INVALID_ID` |
 | `404 Not Found` | No participant with this ID | `ApiResponse` with `NOT_FOUND` |
 | `500 Internal Server Error` | Persistence failure | `ApiResponse` with `DELETE_FAILED` |
